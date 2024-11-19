@@ -81,18 +81,6 @@ async def send_welcome(message: types.Message):
     telegram_id = str(message.from_user.id)
     username = message.from_user.username or message.from_user.first_name
 
-    # мусор
-    await message.answer(f"{telegram_id}: telegram_id")
-    # мусор
-    await message.answer(f"{username}: username")
-
-    # мусор
-    await message.answer(f"{message.text}: message.text")
-    # мусор
-    await message.answer(f"{message.text.split()}: message.text.split()")
-    await message.answer(f"{len(message.text.split())}: len(message.text.split())")
-    await message.answer(f"{message.text.split()[1]}: message.text.split()[1]")
-
     # referrer_id = message.text.split()[1] if len(message.text.split()) > 1 else ""
 
     register_or_greet_url = SERVER_URL + "/greet"
