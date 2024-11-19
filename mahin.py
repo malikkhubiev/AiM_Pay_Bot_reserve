@@ -90,8 +90,8 @@ async def send_welcome(message: types.Message):
         "referrer_id": referrer_id
     }
 
-    server_message = requests.post(register_or_greet_url, json=user_data)
-    message.answer(server_message)
+    response = requests.post(register_or_greet_url, json=user_data).json()
+    message.answer(response["message"])
 
     # Создаем основное меню с кнопками
     keyboard = InlineKeyboardMarkup(row_width=1)
