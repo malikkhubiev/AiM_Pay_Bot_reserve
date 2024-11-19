@@ -209,7 +209,6 @@ async def handle_pay_command(message: types.Message):
     # Мусор
     await message.answer(f"{user_data} user_data")
 
-    
     try:
         response = requests.post(check_user_url, json=user_data).json()
         user_id = response["user_id"]
@@ -229,8 +228,7 @@ async def handle_pay_command(message: types.Message):
     # Мусор
     await message.answer(f"{create_payment_url} create_payment_url")
 
-    
-    payment_data = {"user_id": user_id, "amount": amount}
+    payment_data = {"telegram_id": telegram_id, "amount": amount}
 
     # Мусор
     await message.answer(f"{payment_data} payment_data")
