@@ -81,29 +81,18 @@ async def send_welcome(message: types.Message):
     telegram_id = str(message.from_user.id)
     username = message.from_user.username or message.from_user.first_name
 
-    # referrer_id = message.text.split()[1] if len(message.text.split()) > 1 else ""
+    referrer_id = message.text.split()[1] if len(message.text.split()) > 1 else ""
 
     register_or_greet_url = SERVER_URL + "/greet"
-
-    await message.answer(f"{register_or_greet_url}: register_or_greet_url")
 
     user_data = {
         "telegram_id": telegram_id,
         "username": username,
-        # "referrer_id": referrer_id
-        "referrer_id": ""
+        "referrer_id": referrer_id
     }
-
-    # мусор
-    await message.answer(f"{user_data}: user_data")
 
     response = requests.post(register_or_greet_url, json=user_data).json()
     
-    # мусор
-    await message.answer(f"{response}: response")
-
-    await message.answer(response["message"])
-
     # Создаем основное меню с кнопками
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
