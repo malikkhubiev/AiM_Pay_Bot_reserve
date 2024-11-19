@@ -75,22 +75,43 @@ async def on_start_polling():
 # Главное меню с кнопками
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
+    # мусор
+    await message.answer(f"start")
+
     telegram_id = str(message.from_user.id)
     username = message.from_user.username or message.from_user.first_name
+
+    # мусор
+    await message.answer(f"{telegram_id}: telegram_id")
+    # мусор
+    await message.answer(f"{username}: username")
 
     # Проверяем, передан ли реферальный ID
     referrer_id = None
     if len(message.text.split()) > 1:
         referrer_id = message.text.split()[1]
 
+    # мусор
+    await message.answer(referrer_id)
+
     register_or_greet_url = SERVER_URL + "/greet"
+
+    # мусор
+    await message.answer(register_or_greet_url)
     user_data = {
         "telegram_id": telegram_id,
         "username": username,
         "referrer_id": referrer_id
     }
 
+    # мусор
+    await message.answer(f"{user_data}: user_data")
+
     response = requests.post(register_or_greet_url, json=user_data).json()
+    
+    # мусор
+    await message.answer(f"{response}: response")
+
     await message.answer(response["message"])
 
     # Создаем основное меню с кнопками
