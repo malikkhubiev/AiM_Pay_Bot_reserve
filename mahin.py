@@ -78,10 +78,16 @@ async def send_welcome(message: types.Message):
     telegram_id = str(message.from_user.id)
     username = message.from_user.username or message.from_user.first_name
 
+    # Проверяем, передан ли реферальный ID
+    referrer_id = None
+    if len(message.text.split()) > 1:
+        referrer_id = message.text.split()[1]
+
     register_or_greet_url = SERVER_URL + "/greet"
     user_data = {
         "telegram_id": telegram_id,
         "username": username,
+        "referrer_id": referrer_id
     }
 
     server_message = requests.post(register_or_greet_url, json=user_data)
