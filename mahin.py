@@ -248,10 +248,9 @@ async def handle_pay_command(message: types.Message):
         await message.answer("Ошибка при обработке платежа.")
 
 @dp.message_handler(commands=['report'])
-async def generate_report(message: types.Message):
+async def generate_report(message: types.Message, telegram_id: str):
     # Мусор
     await message.answer(f"generate_report")
-    telegram_id = str(message.from_user.id)
     report_url = SERVER_URL + "/generate_report"
     user_data = {"telegram_id": telegram_id}
 
@@ -293,7 +292,7 @@ async def generate_report(message: types.Message):
         await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
 
 @dp.message_handler(commands=['referral'])
-async def send_referral_link(message: types.Message):
+async def send_referral_link(message: types.Message, telegram_id: str):
     # Мусор
     await message.answer(f"generate_report")
     telegram_id = str(message.from_user.id)
