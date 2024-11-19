@@ -249,6 +249,8 @@ async def handle_pay_command(message: types.Message):
 
 @dp.message_handler(commands=['report'])
 async def generate_report(message: types.Message):
+    # Мусор
+    await message.answer(f"generate_report")
     telegram_id = str(message.from_user.id)
     report_url = SERVER_URL + "/generate_report"
     user_data = {"telegram_id": telegram_id}
@@ -292,6 +294,8 @@ async def generate_report(message: types.Message):
 
 @dp.message_handler(commands=['referral'])
 async def send_referral_link(message: types.Message):
+    # Мусор
+    await message.answer(f"generate_report")
     telegram_id = str(message.from_user.id)
     referral_url = SERVER_URL + "/get_referral_link"
     user_data = {"telegram_id": telegram_id}
