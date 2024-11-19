@@ -255,6 +255,11 @@ async def generate_report(message: types.Message):
     report_url = SERVER_URL + "/generate_report"
     user_data = {"telegram_id": telegram_id}
 
+    # Мусор
+    await message.answer(f"{telegram_id} telegram_id")
+    await message.answer(f"{report_url} report_url")
+    await message.answer(f"{user_data} user_data")
+
     try:
         response = requests.post(report_url, json=user_data).json()
 
@@ -262,6 +267,12 @@ async def generate_report(message: types.Message):
         username = response.get("username")
         referral_count = response.get("referral_count")
         total_payout = response.get("total_payout")
+
+        # Мусор
+        await message.answer(f"{username} username")
+        await message.answer(f"{referral_count} referral_count")
+        await message.answer(f"{total_payout} total_payout")
+
 
         report = (
             f"<b>Отчёт для {username}:</b>\n\n"
@@ -287,10 +298,18 @@ async def send_referral_link(message: types.Message):
     referral_url = SERVER_URL + "/get_referral_link"
     user_data = {"telegram_id": telegram_id}
 
+    # Мусор
+    await message.answer(f"{telegram_id} telegram_id")
+    await message.answer(f"{referral_url} referral_url")
+    await message.answer(f"{user_data} user_data")
+
     try:
         response = requests.post(referral_url, json=user_data).json()
         referral_link = response.get("referral_link")
 
+        # Мусор
+        await message.answer(f"{referral_link} referral_link")
+    
         if referral_link:
             await bot.send_video(
                 chat_id=message.chat.id,
