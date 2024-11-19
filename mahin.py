@@ -97,6 +97,8 @@ async def send_welcome(message: types.Message):
 
     register_or_greet_url = SERVER_URL + "/greet"
 
+    await message.answer(f"{register_or_greet_url}: register_or_greet_url")
+
     user_data = {
         "telegram_id": telegram_id,
         "username": username,
