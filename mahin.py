@@ -75,9 +75,6 @@ async def on_start_polling():
 # Главное меню с кнопками
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
-    # мусор
-    await message.answer(f"start")
-
     telegram_id = str(message.from_user.id)
     username = message.from_user.username or message.from_user.first_name
 
@@ -198,15 +195,26 @@ async def process_tax_info(callback_query: types.CallbackQuery):
 async def handle_pay_command(message: types.Message):
     telegram_id = str(message.from_user.id)
     amount = COURSE_AMOUNT  # Пример суммы, можно заменить
-    description = "Оплата курса"
     
+    # Мусор
+    await message.answer(f"{amount} amount")
+
     # Шаг 1: Проверка, зарегистрирован ли пользователь
     check_user_url = SERVER_URL + "/check_user"
+
+    # Мусор
+    await message.answer(f"{check_user_url} check_user_url")
+
     user_data = {"telegram_id": telegram_id}
+    # Мусор
+    await message.answer(f"{user_data} user_data")
+
     
     try:
         response = requests.post(check_user_url, json=user_data).json()
-        user_id = response.get("user_id")
+        user_id = response["user_id"]
+        # Мусор
+        await message.answer(f"{user_id} user_id")
     except requests.RequestException as e:
         logger.error("Ошибка при проверке пользователя: %s", e)
         await message.answer("Ошибка при проверке регистрации. Пожалуйста, попробуйте позже.")
@@ -218,12 +226,20 @@ async def handle_pay_command(message: types.Message):
 
     # Шаг 2: Отправка запроса на создание платежа
     create_payment_url = SERVER_URL + "/create_payment"
+    # Мусор
+    await message.answer(f"{create_payment_url} create_payment_url")
+
+    
     payment_data = {"user_id": user_id, "amount": amount}
 
+    # Мусор
+    await message.answer(f"{payment_data} payment_data")
     try:
         response = requests.post(create_payment_url, json=payment_data).json()
         payment_url = response.get("confirmation", {}).get("confirmation_url")
-        
+        # Мусор
+        await message.answer(f"{payment_url} payment_url")
+
         if payment_url:
             await message.answer(f"Для оплаты курса, перейдите по ссылке: {payment_url}")
         else:
