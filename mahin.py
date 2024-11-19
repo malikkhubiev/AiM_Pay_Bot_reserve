@@ -194,7 +194,7 @@ async def process_tax_info(callback_query: types.CallbackQuery):
 @dp.message_handler(commands=['pay'])
 async def handle_pay_command(message: types.Message):
     telegram_id = str(message.from_user.id)
-    amount = COURSE_AMOUNT  # Пример суммы, можно заменить
+    amount = str(COURSE_AMOUNT)  # Пример суммы, можно заменить
     
     # Мусор
     await message.answer(f"{amount} amount")
