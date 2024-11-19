@@ -93,10 +93,7 @@ async def send_welcome(message: types.Message):
     await message.answer(f"{len(message.text.split())}: len(message.text.split())")
     await message.answer(f"{message.text.split()[1]}: message.text.split()[1]")
 
-    # Проверяем, передан ли реферальный ID
-    referrer_id = None
-    if len(message.text.split()) > 1:
-        referrer_id = message.text.split()[1]
+    referrer_id = message.text.split()[1] or ""
 
     # мусор
     await message.answer(referrer_id)
@@ -108,7 +105,7 @@ async def send_welcome(message: types.Message):
     user_data = {
         "telegram_id": telegram_id,
         "username": username,
-        "referrer_id": referrer_id or ""
+        "referrer_id": referrer_id
     }
 
     # мусор
