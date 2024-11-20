@@ -41,12 +41,12 @@ def web_server():
     
     async def notify_user(request):
         data = await request.json()
-        telegram_id = data.get("telegram_id")
+        tg_id = data.get("telegram_id")
         message_text = data.get("message")
 
         # Отправляем сообщение пользователю через Telegram
-        if telegram_id and message_text:
-            await bot.send_message(chat_id=telegram_id, text=message_text)
+        if tg_id and message_text:
+            await bot.send_message(chat_id=tg_id, text=message_text)
             return web.json_response({"status": "notification sent"}, status=200)
         return web.json_response({"error": "Invalid data"}, status=400)
 
@@ -294,8 +294,7 @@ async def generate_report(message: types.Message, telegram_id: str):
 @dp.message_handler(commands=['referral'])
 async def send_referral_link(message: types.Message, telegram_id: str):
     # Мусор
-    await message.answer(f"generate_report")
-    telegram_id = str(message.from_user.id)
+    await message.answer(f"send_referral_link")
     referral_url = SERVER_URL + "/get_referral_link"
     user_data = {"telegram_id": telegram_id}
 
