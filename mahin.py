@@ -179,6 +179,7 @@ async def process_get_referral(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == 'get_payout')
 async def process_get_referral(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
+    await bot.send_message(callback_query.message.chat.id, f"Вы нажали: {callback_query.data}")
     await get_payout(callback_query.message, callback_query.from_user.id, state)
 
 
