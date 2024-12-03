@@ -118,8 +118,8 @@ async def send_welcome(message: types.Message):
     }
 
     response = requests.post(check_referrals_url, json=user_data).json()
-    referral_exists = response["has_referrals"]
     keyboard.add(InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients'))
+    # referral_exists = response["has_referrals"]
     # Включить позже, а сверху выключить
     # if referral_exists:
     #     # Кнопка для заработка на клиентах, если есть хотя бы один реферал
