@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()  # Загружает переменные окружения из файла .env
 
+USE_RENDER = os.getenv("USE_RENDER")
+
 API_TOKEN = os.getenv("API_TOKEN")
 SERVER_URL = os.getenv("SERVER_URL")
 MAHIN_URL = os.getenv("MAHIN_URL")

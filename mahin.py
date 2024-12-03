@@ -4,9 +4,8 @@ import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import NoResultFound
-from datetime import datetime
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import FSMContext
 from aiohttp import web
 import nest_asyncio
 from config import (
@@ -23,7 +22,11 @@ from config import (
 )
 import requests
 bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+
+# Подключаем MemoryStorage
+storage = MemoryStorage()
+
+dp = Dispatcher(bot, storage=storage)
 
 # Установим базовый уровень логирования
 logging.basicConfig(level=logging.DEBUG)
@@ -56,7 +59,7 @@ def web_server():
     app.router.add_post("/notify_user", notify_user)
     return app
 
-async def on_start_polling():
+async def start_web_server():
     # Настройка веб-сервера с использованием aiohttp
     app = web.AppRunner(web_server())
     await app.setup()
@@ -72,9 +75,17 @@ async def on_start_polling():
     # Запуск бота с ожиданием завершения
     await executor.start_polling(dp, skip_updates=True)
 
+async def start_polling():
+    await dp.start_polling()
+
 # Главное меню с кнопками
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
+    logging.debug(f"Получена команда /start от {message.from_user.id}")
+
+    # Мусор
+    await message.answer(f"hey")
+
     telegram_id = str(message.from_user.id)
     username = message.from_user.username or message.from_user.first_name
 
@@ -87,6 +98,9 @@ async def send_welcome(message: types.Message):
         "username": username,
         "referrer_id": referrer_id
     }
+
+    # Мусор
+    await message.answer(f"{user_data} user_data")
 
     response = requests.post(register_or_greet_url, json=user_data).json()
     
@@ -136,6 +150,7 @@ async def process_earn_new_clients(callback_query: types.CallbackQuery):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("Получить реферальную ссылку", callback_data='get_referral'),
+        InlineKeyboardButton("Получить выплату", callback_data='get_payout'),
         InlineKeyboardButton("Сформировать отчёт о заработке", callback_data='generate_report'),
         InlineKeyboardButton("Налоги", callback_data='tax_info')
     )
@@ -158,6 +173,13 @@ async def process_earn_new_clients(callback_query: types.CallbackQuery):
 async def process_get_referral(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     await send_referral_link(callback_query.message, callback_query.from_user.id)
+
+
+# Обработка кнопки "Получить реферальную ссылку"
+@dp.callback_query_handler(lambda c: c.data == 'get_payout')
+async def process_get_referral(callback_query: types.CallbackQuery, state: FSMContext):
+    await bot.answer_callback_query(callback_query.id)
+    await get_payout(callback_query.message, callback_query.from_user.id, state)
 
 
 # Обработка кнопки "Сформировать отчёт о заработке"
@@ -211,7 +233,7 @@ async def handle_pay_command(message: types.Message):
 
     try:
         response = requests.post(check_user_url, json=user_data).json()
-        user_id = response["user_id"]
+        user_id = response["user"].id
         # Мусор
         await message.answer(f"{user_id} user_id")
     except requests.RequestException as e:
@@ -266,17 +288,20 @@ async def generate_report(message: types.Message, telegram_id: str):
         username = response.get("username")
         referral_count = response.get("referral_count")
         total_payout = response.get("total_payout")
+        current_balance = response.get("current_balance")
 
         # Мусор
         await message.answer(f"{username} username")
         await message.answer(f"{referral_count} referral_count")
         await message.answer(f"{total_payout} total_payout")
+        await message.answer(f"{current_balance} current_balance")
 
 
         report = (
             f"<b>Отчёт для {username}:</b>\n\n"
             f"Привлечённые пользователи: {referral_count}\n"
-            f"Общая сумма потенциальных выплат: {total_payout} руб.\n\n"
+            f"Общая количество когда-либо заработанных денег: {total_payout} руб.\n\n"
+            f"Текущий баланс: {current_balance} руб.\n\n"
         )
 
         await bot.send_video(
@@ -335,23 +360,30 @@ async def send_referral_link(message: types.Message, telegram_id: str):
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 class UserStates(StatesGroup):
     enter_payout_amount = State()  # Состояние для ввода суммы выплаты
 
 @dp.message_handler(Command("get_payout"))
-async def get_payout(message: types.Message, state: FSMContext):
+async def get_payout(message: types.Message, telegram_id: str, state: FSMContext):
     """
     Обрабатывает запрос пользователя на выплату: показывает текущий баланс и запрашивает сумму для выплаты.
     """
-    telegram_id = message.from_user.id
 
+    # мусор
+    message.answer("telegram_id", telegram_id)
     try:
         # Запрос баланса через FastAPI эндпоинт
         response = requests.get(f"{SERVER_URL}/get_balance/{telegram_id}")
         response.raise_for_status()
         data = response.json()
+        # мусор
+        message.answer("data", data)
+    
         balance = data.get("balance")
+        # мусор
+        message.answer("balance", balance)
 
         if balance <= 0:
             await message.answer(
@@ -378,11 +410,24 @@ async def process_payout_amount(message: types.Message, state: FSMContext):
     Обрабатывает сумму, введённую пользователем, и создаёт запрос на выплату.
     """
     user_data = await state.get_data()
+    # мусор
+    message.answer("user_data", user_data)
+
     balance = user_data.get("balance")
+
+    # мусор
+    message.answer("balance", balance)
+
     telegram_id = message.from_user.id
+    
+    # мусор
+    message.answer("telegram_id", telegram_id)
 
     try:
         amount = float(message.text)
+        # мусор
+        message.answer("amount", amount)
+        
         if amount <= 0:
             await message.answer("Сумма должна быть больше 0. Попробуйте ещё раз.")
             return
@@ -396,11 +441,14 @@ async def process_payout_amount(message: types.Message, state: FSMContext):
 
         # Делаем запрос к FastAPI эндпоинту для создания выплаты
         response = requests.post(
-            f"{SERVER_URL}/create_payout_request",
+            f"{SERVER_URL}/add_payout_toDb",
             json={"telegram_id": telegram_id, "amount": amount}
         )
         response.raise_for_status()
         payout_data = response.json()
+
+        # мусор
+        message.answer("payout_data", payout_data)
 
         # Обработка ответа от FastAPI
         if payout_data["status"] == "ready_to_pay":
@@ -413,6 +461,9 @@ async def process_payout_amount(message: types.Message, state: FSMContext):
             )
             payout_response.raise_for_status()
             payout_result = payout_response.json()
+
+            # мусор
+            message.answer("payout_result", payout_result)
 
             if payout_result["status"] == "success":
                 await message.answer(payout_result["message"])
@@ -446,7 +497,12 @@ async def process_payout_amount(message: types.Message, state: FSMContext):
     # Завершаем состояние
     await state.finish()
 
+USE_RENDER = os.getenv("USE_RENDER", "false").lower() == "true"
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(on_start_polling())
+    if USE_RENDER:
+        # Render: запускаем веб-сервер
+        asyncio.run(start_web_server())
+    else:
+        # Локально: запускаем polling
+        asyncio.run(start_polling())
