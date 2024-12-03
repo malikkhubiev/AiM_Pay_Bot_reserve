@@ -372,18 +372,18 @@ async def get_payout(message: types.Message, telegram_id: str, state: FSMContext
     """
 
     # мусор
-    message.answer("telegram_id", telegram_id)
+    await message.answer("telegram_id", telegram_id)
     try:
         # Запрос баланса через FastAPI эндпоинт
         response = requests.get(f"{SERVER_URL}/get_balance/{telegram_id}")
         response.raise_for_status()
         data = response.json()
         # мусор
-        message.answer("data", data)
+        await message.answer("data", data)
     
         balance = data.get("balance")
         # мусор
-        message.answer("balance", balance)
+        await message.answer("balance", balance)
 
         if balance <= 0:
             await message.answer(
@@ -411,22 +411,22 @@ async def process_payout_amount(message: types.Message, state: FSMContext):
     """
     user_data = await state.get_data()
     # мусор
-    message.answer("user_data", user_data)
+    await message.answer("user_data", user_data)
 
     balance = user_data.get("balance")
 
     # мусор
-    message.answer("balance", balance)
+    await message.answer("balance", balance)
 
     telegram_id = message.from_user.id
     
     # мусор
-    message.answer("telegram_id", telegram_id)
+    await message.answer("telegram_id", telegram_id)
 
     try:
         amount = float(message.text)
         # мусор
-        message.answer("amount", amount)
+        await message.answer("amount", amount)
         
         if amount <= 0:
             await message.answer("Сумма должна быть больше 0. Попробуйте ещё раз.")
@@ -448,7 +448,7 @@ async def process_payout_amount(message: types.Message, state: FSMContext):
         payout_data = response.json()
 
         # мусор
-        message.answer("payout_data", payout_data)
+        await message.answer("payout_data", payout_data)
 
         # Обработка ответа от FastAPI
         if payout_data["status"] == "ready_to_pay":
@@ -463,7 +463,7 @@ async def process_payout_amount(message: types.Message, state: FSMContext):
             payout_result = payout_response.json()
 
             # мусор
-            message.answer("payout_result", payout_result)
+            await message.answer("payout_result", payout_result)
 
             if payout_result["status"] == "success":
                 await message.answer(payout_result["message"])
