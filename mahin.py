@@ -6,6 +6,10 @@ from aiogram.utils import executor
 from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters import Command
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiohttp import web
 import nest_asyncio
 from config import (
@@ -25,6 +29,9 @@ bot = Bot(token=API_TOKEN)
 
 # Подключаем MemoryStorage
 storage = MemoryStorage()
+
+class UserStates(StatesGroup):
+    enter_payout_amount = State()  # Состояние для ввода суммы выплаты
 
 dp = Dispatcher(bot, storage=storage)
 
@@ -358,14 +365,6 @@ async def send_referral_link(message: types.Message, telegram_id: str):
 
 # Реферальные выплаты
 
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Command
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-
-class UserStates(StatesGroup):
-    enter_payout_amount = State()  # Состояние для ввода суммы выплаты
-
 @dp.message_handler(Command("get_payout"))
 async def get_payout(message: types.Message, telegram_id: str, state: FSMContext):
     """
@@ -399,8 +398,8 @@ async def get_payout(message: types.Message, telegram_id: str, state: FSMContext
         )
 
         # Сохраняем состояние пользователя для ожидания ввода суммы
-        await UserStates.enter_payout_amount.set()
         await state.update_data(balance=balance)  # Сохраняем баланс в состояние
+        await UserStates.enter_payout_amount.set()
     except requests.RequestException as e:
         logger.error(f"Ошибка при получении баланса: {e}")
         await message.answer("Не удалось получить ваш баланс. Попробуйте позже.")
