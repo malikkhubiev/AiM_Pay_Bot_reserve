@@ -372,7 +372,7 @@ async def get_payout(message: types.Message, telegram_id: str, state: FSMContext
     """
 
     # мусор
-    await message.answer("telegram_id", telegram_id)
+    await message.answer("telegram_id", "213")
     try:
         # Запрос баланса через FastAPI эндпоинт
         response = requests.get(f"{SERVER_URL}/get_balance/{telegram_id}")
