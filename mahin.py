@@ -452,6 +452,9 @@ async def process_payout_amount(message: types.Message):
                     f"Ошибка при выплате: {payout_result.get('message', 'Неизвестная ошибка')}"
                 )
         elif payout_data["status"] == "awaiting_card":
+            
+            await message.answer(f"awaiting_card")
+            
             payout_response = requests.post(
                 f"{SERVER_URL}/make_payout",
                 json={"telegram_id": telegram_id, "amount": amount}
@@ -460,6 +463,9 @@ async def process_payout_amount(message: types.Message):
             payout_response.raise_for_status()
             payout_result = payout_response.json()
             payment_url = payout_result["payment_url"]
+
+            await message.answer(f"payment_url {payment_url}")
+
             
             await message.answer(
                 f"Ваш запрос на выплату {amount:.2f} RUB принят, но у вас не привязана карта. "
