@@ -365,7 +365,6 @@ async def send_referral_link(message: types.Message, telegram_id: str):
 
 # Реферальные выплаты
 
-@dp.callback_query_handler(lambda message: message.data == 'get_payout')
 async def get_payout(callback_query: types.CallbackQuery):
     telegram_id = callback_query.from_user.id
     
