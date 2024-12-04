@@ -229,7 +229,7 @@ async def handle_pay_command(message: types.Message):
     try:
         response = requests.post(check_user_url, json=user_data).json()
         await message.answer(f"{response} response")
-        user_id = response["user"].id
+        user_id = response["user"]["id"]
         # Мусор
         await message.answer(f"{user_id} user_id")
     except requests.RequestException as e:
