@@ -187,7 +187,7 @@ async def process_get_referral(callback_query: types.CallbackQuery):
 async def process_get_referral(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(callback_query.message.chat.id, f"Вы нажали: {callback_query.data}")
-    await get_payout(callback_query.message)
+    await get_payout(callback_query)
 
 
 # Обработка кнопки "Сформировать отчёт о заработке"
