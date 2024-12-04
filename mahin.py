@@ -4,12 +4,6 @@ import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Command
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiohttp import web
 import nest_asyncio
 from config import (
@@ -27,13 +21,7 @@ from config import (
 import requests
 bot = Bot(token=API_TOKEN)
 
-# Подключаем MemoryStorage
-storage = MemoryStorage()
-
-class UserStates(StatesGroup):
-    enter_payout_amount = State()  # Состояние для ввода суммы выплаты
-
-dp = Dispatcher(bot, storage=storage)
+dp = Dispatcher(bot)
 
 # Установим базовый уровень логирования
 logging.basicConfig(level=logging.DEBUG)
@@ -184,10 +172,9 @@ async def process_get_referral(callback_query: types.CallbackQuery):
 
 # Обработка кнопки "Получить реферальную ссылку"
 @dp.callback_query_handler(lambda c: c.data == 'get_payout')
-async def process_get_referral(callback_query: types.CallbackQuery, state: FSMContext):
+async def process_get_referral(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.message.chat.id, f"Вы нажали: {callback_query.data}")
-    await get_payout(callback_query)
+    await get_payout(callback_query.message, callback_query.from_user.id)
 
 
 # Обработка кнопки "Сформировать отчёт о заработке"
@@ -365,10 +352,9 @@ async def send_referral_link(message: types.Message, telegram_id: str):
 
 # Реферальные выплаты
 
-async def get_payout(callback_query: types.CallbackQuery):
-    telegram_id = callback_query.from_user.id
-    
-    await callback_query.message.answer("telegram_id", telegram_id)
+async def get_payout(message: types.Message, telegram_id: str):
+
+    await message.answer("telegram_id", telegram_id)
 
     # Запрос баланса с сервера
     response = requests.get(f"{SERVER_URL}/get_balance/{telegram_id}")
@@ -376,18 +362,18 @@ async def get_payout(callback_query: types.CallbackQuery):
     data = response.json()
     balance = data.get("balance", 0)
 
-    await callback_query.message.answer("balance", balance)
+    await message.answer("balance", balance)
 
     if balance <= 0:
         await bot.send_message(
-            callback_query.message.chat.id, 
+            message.chat.id, 
             "Ваш баланс равен 0. Вы не можете запросить выплату."
         )
         return
 
     # Просим пользователя ввести сумму в формате: "Выплата: 5000"
     await bot.send_message(
-        callback_query.message.chat.id,
+        message.chat.id,
         f"Ваш текущий баланс: {balance:.2f} RUB.\n"
         "Введите сумму для выплаты в формате: 'Выплата: <сумма>', например: 'Выплата: 5000'."
     )
@@ -485,98 +471,10 @@ async def process_payout_amount(message: types.Message):
     except ValueError:
         await message.answer("Некорректный формат суммы. Введите сумму в формате: 'Выплата: <сумма>'.")
 
-@dp.message_handler(state=UserStates.enter_payout_amount)
-async def process_payout_amount(message: types.Message, state: FSMContext):
-    """
-    Обрабатывает сумму, введённую пользователем, и создаёт запрос на выплату.
-    """
-    user_data = await state.get_data()
-    # мусор
-    await message.answer("user_data", user_data)
 
-    balance = user_data.get("balance")
 
-    # мусор
-    await message.answer("balance", balance)
 
-    telegram_id = message.from_user.id
-    
-    # мусор
-    await message.answer("telegram_id", telegram_id)
 
-    try:
-        amount = float(message.text)
-        # мусор
-        await message.answer("amount", amount)
-        
-        if amount <= 0:
-            await message.answer("Сумма должна быть больше 0. Попробуйте ещё раз.")
-            return
-
-        if amount > balance:
-            await message.answer(
-                f"У вас недостаточно средств. Ваш текущий баланс: {balance:.2f} RUB. "
-                "Введите сумму, которая меньше или равна вашему балансу."
-            )
-            return
-
-        # Делаем запрос к FastAPI эндпоинту для создания выплаты
-        response = requests.post(
-            f"{SERVER_URL}/add_payout_toDb",
-            json={"telegram_id": telegram_id, "amount": amount}
-        )
-        response.raise_for_status()
-        payout_data = response.json()
-
-        # мусор
-        await message.answer("payout_data", payout_data)
-
-        # Обработка ответа от FastAPI
-        if payout_data["status"] == "ready_to_pay":
-            await message.answer(
-                f"Ваш запрос на выплату {amount:.2f} RUB принят. Выплата будет выполнена в ближайшее время."
-            )
-            payout_response = requests.post(
-                f"{SERVER_URL}/make_payout",
-                json={"telegram_id": telegram_id, "amount": amount}
-            )
-            payout_response.raise_for_status()
-            payout_result = payout_response.json()
-
-            # мусор
-            await message.answer("payout_result", payout_result)
-
-            if payout_result["status"] == "success":
-                await message.answer(payout_result["message"])
-            else:
-                await message.answer(
-                    f"Ошибка при выплате: {payout_result.get('message', 'Неизвестная ошибка')}"
-                )
-        elif payout_data["status"] == "awaiting_card":
-            payout_response = requests.post(
-                f"{SERVER_URL}/make_payout",
-                json={"telegram_id": telegram_id, "amount": amount}
-            )
-
-            payout_response.raise_for_status()
-            payout_result = payout_response.json()
-            payment_url = payout_result["payment_url"]
-            
-            await message.answer(
-                f"Ваш запрос на выплату {amount:.2f} RUB принят, но у вас не привязана карта. "
-                "Пожалуйста, привяжите карту для получения выплаты. Перейдите по ссылке ниже."
-            )
-            await message.answer(f"Перейдите по ссылке для ввода данных карты: {payment_url}")
-        else:
-            await message.answer("Произошла ошибка. Попробуйте ещё раз позже.")
-    except requests.RequestException as e:
-        logger.error(f"Ошибка при запросе выплаты: {e}")
-        await message.answer("Не удалось обработать ваш запрос. Попробуйте позже.")
-    except ValueError:
-        await message.answer("Пожалуйста, введите корректное число.")
-
-    # Завершаем состояние
-    await state.finish()
 
 USE_RENDER = os.getenv("USE_RENDER", "false").lower() == "true"
 
