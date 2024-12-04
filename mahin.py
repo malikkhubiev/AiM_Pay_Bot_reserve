@@ -187,7 +187,7 @@ async def process_get_referral(callback_query: types.CallbackQuery):
 async def process_get_referral(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(callback_query.message.chat.id, f"Вы нажали: {callback_query.data}")
-    await get_payout(callback_query.message, callback_query.from_user.id, state)
+    await get_payout(callback_query.message)
 
 
 # Обработка кнопки "Сформировать отчёт о заработке"
@@ -365,14 +365,19 @@ async def send_referral_link(message: types.Message, telegram_id: str):
 
 # Реферальные выплаты
 
-@dp.callback_query_handler(lambda c: c.data == 'get_payout')
+@dp.callback_query_handler(lambda message: message.data == 'get_payout')
 async def get_payout(callback_query: types.CallbackQuery):
     telegram_id = callback_query.from_user.id
+    
+    await callback_query.message.answer("telegram_id", telegram_id)
+
     # Запрос баланса с сервера
     response = requests.get(f"{SERVER_URL}/get_balance/{telegram_id}")
     response.raise_for_status()
     data = response.json()
     balance = data.get("balance", 0)
+
+    await callback_query.message.answer("balance", balance)
 
     if balance <= 0:
         await bot.send_message(
@@ -394,7 +399,12 @@ async def process_payout_amount(message: types.Message):
     try:
         # Извлекаем число после "Выплата: "
         amount_str = message.text[len('Выплата: '):].strip()
+
+        await message.answer("amount_str", amount_str)
+        
         amount = float(amount_str)
+
+        await message.answer("amount", amount)
 
         # Проверка на валидность суммы
         if amount <= 0:
@@ -403,10 +413,18 @@ async def process_payout_amount(message: types.Message):
 
         # Получаем баланс пользователя из словаря или базы данных
         telegram_id = message.from_user.id
+
+        await message.answer("telegram_id", telegram_id)
+
         response = requests.get(f"{SERVER_URL}/get_balance/{telegram_id}")
         response.raise_for_status()
         data = response.json()
+
+        await message.answer("data", data)
+
         balance = data.get("balance", 0)
+
+        await message.answer("balance", balance)
 
         if amount > balance:
             await message.answer(
