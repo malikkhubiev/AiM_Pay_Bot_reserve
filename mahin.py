@@ -351,7 +351,7 @@ async def send_referral_link(message: types.Message, telegram_id: str):
 
 
 # Реферальные выплаты
-
+@dp.message_handler(commands=['get_payout'])
 async def get_payout(message: types.Message, telegram_id: str):
 
     await message.answer(f"telegram_id {telegram_id}")
