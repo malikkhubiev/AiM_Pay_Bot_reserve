@@ -376,41 +376,48 @@ async def get_payout(message: types.Message, telegram_id: str):
     await bot.send_message(
         message.chat.id,
         f"Ваш текущий баланс: {balance:.2f} RUB.\n"
-        "Введите сумму для выплаты в формате: 'Выплата: <сумма>', например: 'Выплата: 5000'."
+        "Введите данные для выплаты в формате:\nВыплата: 5000, Карта: 000 0000 0000 0000"
     )
 
 @dp.message_handler(lambda message: message.text.lower().startswith('выплата: '))
 async def process_payout_amount(message: types.Message):
     # Получаем сумму из текста
     try:
-        # Извлекаем число после "Выплата: "
-        amount_str = message.text[len('Выплата: '):].strip()
+        # Извлекаем данные после "Выплата: "
+        text = message.text[len('Выплата: '):].strip()
 
-        await message.answer(f"amount_str {amount_str}")
-
+        # Разделяем текст на части, ожидаем формат "Выплата: <сумма>, Карта: <номер карты>"
+        if ',' not in text:
+            await message.answer("Неверный формат. Используйте формат: Выплата: <сумма>, Карта: <номер карты>")
+            return
         
-        amount = float(amount_str)
+        # Разделяем на сумму и карту
+        amount_str, card_number_str = text.split(',', 1)
+        amount_str = amount_str.replace('Выплата:', '').strip()
+        card_number_str = card_number_str.replace('Карта:', '').strip()
 
-        await message.answer(f"amount {amount}")
+        # Преобразуем сумму в число
+        amount = float(amount_str)
 
         # Проверка на валидность суммы
         if amount <= 0:
             await message.answer("Сумма должна быть больше 0. Попробуйте ещё раз.")
             return
 
-        # Получаем баланс пользователя из словаря или базы данных
+        # Проверяем, что номер карты валидный (можно добавить больше валидации по необходимости)
+        if len(card_number_str.replace(' ', '')) != 16 or not card_number_str.replace(' ', '').isdigit():
+            await message.answer("Некорректный номер карты. Проверьте и повторите.")
+            return
+        
         telegram_id = message.from_user.id
-
         await message.answer(f"telegram_id {telegram_id}")
 
         response = requests.get(f"{SERVER_URL}/get_balance/{telegram_id}")
         response.raise_for_status()
         data = response.json()
-
         await message.answer(f"data {data}")
 
         balance = data.get("balance", 0)
-
         await message.answer(f"balance {balance}")
 
         if amount > balance:
@@ -427,8 +434,6 @@ async def process_payout_amount(message: types.Message):
         )
         response.raise_for_status()
         payout_data = response.json()
-
-        # мусор
         await message.answer(f"payout_data {payout_data}")
 
         # Обработка ответа от FastAPI
@@ -438,7 +443,7 @@ async def process_payout_amount(message: types.Message):
             )
             payout_response = requests.post(
                 f"{SERVER_URL}/make_payout",
-                json={"telegram_id": telegram_id, "amount": amount}
+                json={"telegram_id": telegram_id}
             )
             payout_response.raise_for_status()
             payout_result = payout_response.json()
@@ -452,35 +457,11 @@ async def process_payout_amount(message: types.Message):
                 await message.answer(
                     f"Ошибка при выплате: {payout_result.get('message', 'Неизвестная ошибка')}"
                 )
-        elif payout_data["status"] == "awaiting_card":
-            
-            await message.answer(f"awaiting_card")
-            
-            payout_response = requests.post(
-                f"{SERVER_URL}/make_payout",
-                json={"telegram_id": telegram_id, "amount": amount}
-            )
-
-            payout_response.raise_for_status()
-            payout_result = payout_response.json()
-            payment_url = payout_result["payment_url"]
-
-            await message.answer(f"payment_url {payment_url}")
-
-            
-            await message.answer(
-                f"Ваш запрос на выплату {amount:.2f} RUB принят, но у вас не привязана карта. "
-                "Пожалуйста, привяжите карту для получения выплаты. Перейдите по ссылке ниже."
-            )
-            await message.answer(f"Перейдите по ссылке для ввода данных карты: {payment_url}")
         else:
-            await message.answer("Произошла ошибка. Попробуйте ещё раз позже.")
+            await message.answer(payout_data["reason"])
 
     except ValueError:
-        await message.answer("Некорректный формат суммы. Введите сумму в формате: 'Выплата: <сумма>'.")
-
-
-
+        await message.answer("Некорректный формат данных.")
 
 
 
