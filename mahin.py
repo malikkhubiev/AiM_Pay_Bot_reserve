@@ -98,6 +98,7 @@ async def send_welcome(message: types.Message):
     await message.answer(f"{user_data} user_data")
 
     response = requests.post(register_or_greet_url, json=user_data).json()
+    await message.answer(f"{response}")
     
     # Создаем основное меню с кнопками
     keyboard = InlineKeyboardMarkup(row_width=1)
