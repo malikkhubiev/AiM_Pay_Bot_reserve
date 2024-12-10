@@ -387,8 +387,12 @@ async def get_payout(message: types.Message, telegram_id: str):
 
     await message.answer(f"telegram_id {telegram_id}")
 
+    user_data = {
+        "telegram_id": telegram_id
+    }
+
     # Запрос баланса с сервера
-    response = requests.get(f"{SERVER_URL}/get_balance/{telegram_id}")
+    response = requests.post(f"{SERVER_URL}/get_balance", json=user_data)
     response.raise_for_status()
     data = response.json()
     balance = data.get("balance", 0)
@@ -441,8 +445,13 @@ async def process_payout_amount(message: types.Message):
         
         telegram_id = message.from_user.id
         await message.answer(f"telegram_id {telegram_id}")
+        
+        user_data = {
+            "telegram_id": telegram_id
+        }
 
-        response = requests.get(f"{SERVER_URL}/get_balance/{telegram_id}")
+        # Запрос баланса с сервера
+        response = requests.post(f"{SERVER_URL}/get_balance", json=user_data)
         response.raise_for_status()
         data = response.json()
         await message.answer(f"data {data}")
