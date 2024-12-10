@@ -145,6 +145,7 @@ async def process_earn_new_clients(callback_query: types.CallbackQuery):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("Получить реферальную ссылку", callback_data='get_referral'),
+        InlineKeyboardButton("Привязать/изменить карту", callback_data='bind_card'),
         InlineKeyboardButton("Получить выплату", callback_data='get_payout'),
         InlineKeyboardButton("Сформировать отчёт о заработке", callback_data='generate_report'),
         InlineKeyboardButton("Налоги", callback_data='tax_info')
@@ -169,6 +170,12 @@ async def process_get_referral(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     await send_referral_link(callback_query.message, callback_query.from_user.id)
 
+
+# Обработка кнопки "Получить реферальную ссылку"
+@dp.callback_query_handler(lambda c: c.data == 'bind_card')
+async def process_get_referral(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    await bind_card(callback_query.message, callback_query.from_user.id)
 
 # Обработка кнопки "Получить реферальную ссылку"
 @dp.callback_query_handler(lambda c: c.data == 'get_payout')
@@ -311,6 +318,28 @@ async def generate_report(message: types.Message, telegram_id: str):
         await message.answer("Ошибка при генерации отчета.")
     except KeyError:
         await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
+
+@dp.message_handler(commands=['referral'])
+async def bind_card(message: types.Message, telegram_id: str):
+    bind_card_url = SERVER_URL + "/bind_card"
+    user_data = {"telegram_id": telegram_id}
+    try:
+        response = requests.post(bind_card_url, json=user_data).json()
+        binding_url = response.get("binding_url")
+
+        # Мусор
+        await message.answer(f"{binding_url} binding_url")
+    
+        if binding_url:
+            await message.answer(f"Перейдите по следующей ссылке для привязки карты: {binding_url}")
+        else:
+            await message.answer("Ошибка при генерации ссылки.")
+    except requests.RequestException as e:
+        logger.error("Ошибка при отправке запроса на сервер: %s", e)
+        await message.answer("Ошибка при генерации ссылки.")
+    except KeyError:
+        await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
+
 
 @dp.message_handler(commands=['referral'])
 async def send_referral_link(message: types.Message, telegram_id: str):
