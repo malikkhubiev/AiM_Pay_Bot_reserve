@@ -326,6 +326,8 @@ async def bind_card(message: types.Message, telegram_id: str):
     user_data = {"telegram_id": telegram_id}
     try:
         response = requests.post(bind_card_url, json=user_data).json()
+        if response.get("status") == "error":
+            await message.answer(response.get("message"))
         binding_url = response.get("binding_url")
 
         # Мусор
@@ -445,7 +447,7 @@ async def process_payout_amount(message: types.Message):
         
         telegram_id = message.from_user.id
         await message.answer(f"telegram_id {telegram_id}")
-        
+
         user_data = {
             "telegram_id": telegram_id
         }
