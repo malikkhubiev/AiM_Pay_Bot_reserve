@@ -136,8 +136,7 @@ async def send_welcome(message: types.Message):
 @dp.callback_query_handler(lambda c: c.data == 'pay_course')
 async def process_pay_course(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
-    await callback_query.message.answer("Здесь будет информация о платеже. Нажмите /pay для оплаты.")
-
+    await handle_pay_command(callback_query.message, callback_query.from_user.id)
 
 @dp.callback_query_handler(lambda c: c.data == 'earn_new_clients')
 async def process_earn_new_clients(callback_query: types.CallbackQuery):
@@ -412,7 +411,7 @@ async def get_payout(message: types.Message, telegram_id: str):
     await bot.send_message(
         message.chat.id,
         f"Ваш текущий баланс: {balance:.2f} RUB.\n"
-        "Введите данные для выплаты в формате:\nВыплата: 5000, Карта: 000 0000 0000 0000"
+        "Введите данные для выплаты в формате:\nВыплата: 5000"
     )
 
 @dp.message_handler(lambda message: message.text.lower().startswith('выплата: '))
@@ -421,28 +420,16 @@ async def process_payout_amount(message: types.Message):
     try:
         # Извлекаем данные после "Выплата: "
         text = message.text[len('Выплата: '):].strip()
-
-        # Разделяем текст на части, ожидаем формат "Выплата: <сумма>, Карта: <номер карты>"
-        if ',' not in text:
-            await message.answer("Неверный формат. Используйте формат: Выплата: <сумма>, Карта: <номер карты>")
+        if not(text.isdigit()):
+            await message.answer("Некорректный формат величины выплаты")
             return
-        
-        # Разделяем на сумму и карту
-        amount_str, card_number_str = text.split(',', 1)
-        amount_str = amount_str.replace('Выплата:', '').strip()
-        card_number_str = card_number_str.replace('Карта:', '').strip()
 
         # Преобразуем сумму в число
-        amount = float(amount_str)
+        amount = float(text)
 
         # Проверка на валидность суммы
         if amount <= 0:
             await message.answer("Сумма должна быть больше 0. Попробуйте ещё раз.")
-            return
-
-        # Проверяем, что номер карты валидный (можно добавить больше валидации по необходимости)
-        if len(card_number_str.replace(' ', '')) != 16 or not card_number_str.replace(' ', '').isdigit():
-            await message.answer("Некорректный номер карты. Проверьте и повторите.")
             return
         
         telegram_id = message.from_user.id
