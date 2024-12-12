@@ -188,7 +188,31 @@ async def process_get_referral(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == 'generate_report')
 async def process_generate_report(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
-    await generate_report(callback_query.message, callback_query.from_user.id)
+
+    # Выбор типа отчёта
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton("Общая информация", callback_data='report_overview'),
+        InlineKeyboardButton("Список привлечённых клиентов", callback_data='report_clients')
+    )
+
+    await bot.send_message(
+        chat_id=callback_query.message.chat.id,
+        text="Какой отчёт вы хотите сформировать?",
+        reply_markup=keyboard
+    )
+
+# Обработка кнопки "Общая информация"
+@dp.callback_query_handler(lambda c: c.data == 'report_overview')
+async def process_report_overview(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    await generate_overview_report(callback_query.message, callback_query.from_user.id)
+
+# Обработка кнопки "Список привлечённых клиентов"
+@dp.callback_query_handler(lambda c: c.data == 'report_clients')
+async def process_report_clients(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    await generate_clients_report(callback_query.message, callback_query.from_user.id)
 
 
 # Обработка кнопки "Налоги"
@@ -271,11 +295,11 @@ async def handle_pay_command(message: types.Message, telegram_id: str):
         logger.error("Ошибка при отправке запроса на сервер: %s", e)
         await message.answer("Ошибка при обработке платежа.")
 
-@dp.message_handler(commands=['report'])
-async def generate_report(message: types.Message, telegram_id: str):
+@dp.message_handler(commands=['generate_overview_report'])
+async def generate_overview_report(message: types.Message, telegram_id: str):
     # Мусор
-    await message.answer(f"generate_report")
-    report_url = SERVER_URL + "/generate_report"
+    await message.answer(f"generate_overview_report")
+    report_url = SERVER_URL + "/generate_overview_report"
     user_data = {"telegram_id": telegram_id}
 
     # Мусор
@@ -291,6 +315,8 @@ async def generate_report(message: types.Message, telegram_id: str):
         referral_count = response.get("referral_count")
         total_payout = response.get("total_payout")
         current_balance = response.get("current_balance")
+        paid_count = response.get("paid_count")
+        paid_percentage = response.get("paid_percentage")
 
         # Мусор
         await message.answer(f"{username} username")
@@ -298,12 +324,13 @@ async def generate_report(message: types.Message, telegram_id: str):
         await message.answer(f"{total_payout} total_payout")
         await message.answer(f"{current_balance} current_balance")
 
-
+        # Generate the report
         report = (
             f"<b>Отчёт для {username}:</b>\n\n"
             f"Привлечённые пользователи: {referral_count}\n"
-            f"Общая количество когда-либо заработанных денег: {total_payout} руб.\n\n"
-            f"Текущий баланс: {current_balance} руб.\n\n"
+            f"Оплатили курс: {paid_count} ({paid_percentage:.2f}%)\n"
+            f"Общее количество заработанных денег: {total_payout:.2f} руб.\n"
+            f"Текущий баланс: {current_balance:.2f} руб.\n\n"
         )
 
         await bot.send_video(
@@ -312,11 +339,69 @@ async def generate_report(message: types.Message, telegram_id: str):
             caption=report,
             parse_mode=ParseMode.HTML
         )
+
     except requests.RequestException as e:
         logger.error("Ошибка при отправке запроса на сервер: %s", e)
         await message.answer("Ошибка при генерации отчета.")
     except KeyError:
         await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
+
+@dp.message_handler(commands=['generate_clients_report'])
+async def generate_clients_report(message: types.Message, telegram_id: str):
+    # Мусор
+    await message.answer(f"generate_clients_report")
+    report_url = SERVER_URL + "/generate_clients_report"
+    user_data = {"telegram_id": telegram_id}
+
+    # Мусор
+    await message.answer(f"{telegram_id} telegram_id")
+    await message.answer(f"{report_url} report_url")
+    await message.answer(f"{user_data} user_data")
+
+    try:
+        response = requests.post(report_url, json=user_data).json()
+
+        # Формируем текст отчета на основе данных из ответа
+        username = response.get("username")
+        invited_list = response.get("invited_list")
+
+        # Мусор
+        await message.answer(f"{username} username")
+
+
+        # Generate the report
+        report = (
+            f"<b>Отчёт для {username}:</b>\n"
+        )
+
+        await bot.send_video(
+            chat_id=message.chat.id,
+            video=REPORT_VIDEO_URL,
+            caption=report,
+            parse_mode=ParseMode.HTML
+        )
+
+        # Send the list of invited users
+        if invited_list:
+            for invited in invited_list:
+                user_status = "Оплатил" if invited["paid"] else "Не оплатил"
+                user_info = (
+                    f"<b>Пользователь:</b> {invited['username']}\n"
+                    f"<b>Telegram ID:</b> {invited['telegram_id']}\n"
+                    f"<b>Статус:</b> {user_status}\n\n"
+                )
+                await bot.send_message(
+                    chat_id=message.chat.id,
+                    text=user_info,
+                    parse_mode=ParseMode.HTML
+                )
+
+    except requests.RequestException as e:
+        logger.error("Ошибка при отправке запроса на сервер: %s", e)
+        await message.answer("Ошибка при генерации отчета.")
+    except KeyError:
+        await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
+
 
 @dp.message_handler(commands=['referral'])
 async def bind_card(message: types.Message, telegram_id: str):
