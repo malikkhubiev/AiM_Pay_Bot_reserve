@@ -481,26 +481,35 @@ async def get_payout(message: types.Message, telegram_id: str):
     }
 
     # Запрос баланса и оплаты курса с сервера
-    response = requests.post(f"{SERVER_URL}/get_balance_and_paid_status", json=user_data)
+    response = requests.post(f"{SERVER_URL}/isAbleToGetPayout", json=user_data)
     response.raise_for_status()
     data = response.json()
     balance = data.get("balance", 0)
     paid = data.get("paid", False)
+    isBinded = data.get("isBinded", False)
 
     await message.answer(f"balance {balance}")
     await message.answer(f"paid {paid}")
+    await message.answer(f"isBinded {isBinded}")
+
+    if not(paid):
+        await bot.send_message(
+            message.chat.id, 
+            "Вы не можете стать партнёром по реферальной программе, не оплатив курс"
+        )
+        return
+
+    if not(isBinded):
+        await bot.send_message(
+            message.chat.id, 
+            "Чтобы получить выплату, привяжите банковскую карту"
+        )
+        return
 
     if balance <= 0:
         await bot.send_message(
             message.chat.id, 
             "Ваш баланс равен 0. Вы не можете запросить выплату."
-        )
-        return
-    
-    if not(paid):
-        await bot.send_message(
-            message.chat.id, 
-            "Вы не можете стать партнёром по реферальной программе, не оплатив курс"
         )
         return
 
@@ -537,7 +546,7 @@ async def process_payout_amount(message: types.Message):
         }
 
         # Запрос баланса с сервера
-        response = requests.post(f"{SERVER_URL}/get_balance_and_paid_status", json=user_data)
+        response = requests.post(f"{SERVER_URL}/isAbleToGetPayout", json=user_data)
         response.raise_for_status()
         data = response.json()
         await message.answer(f"data {data}")
