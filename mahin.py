@@ -441,22 +441,24 @@ async def send_referral_link(message: types.Message, telegram_id: str):
 
     try:
         response = requests.post(referral_url, json=user_data).json()
-        referral_link = response.get("referral_link")
+        result = response.get("referral_link")
 
         # Мусор
-        await message.answer(f"{referral_link} referral_link")
+        await message.answer(f"{result["referral_link"]} referral_link")
     
-        if referral_link:
+        if result["status"] == "success":
             await bot.send_video(
                 chat_id=message.chat.id,
                 video=REFERRAL_VIDEO_URL,
                 caption=(
-                    f"Отправляю тебе реферальную ссылку:\n{referral_link}\n"
+                    f"Отправляю тебе реферальную ссылку:\n{result["referral_link"]}\n"
                     f"Зарабатывай, продвигая It - образование."
                 )
             )
+        elif result["status"] == "error":
+            await message.answer(result["message"])
         else:
-            await message.answer("Ошибка при генерации реферальной ссылки.")
+            await message.answer(result["Ошибка при генерации ссылки"])
     except requests.RequestException as e:
         logger.error("Ошибка при отправке запроса на сервер: %s", e)
         await message.answer("Ошибка при генерации реферальной ссылки.")
@@ -476,11 +478,12 @@ async def get_payout(message: types.Message, telegram_id: str):
         "telegram_id": telegram_id
     }
 
-    # Запрос баланса с сервера
-    response = requests.post(f"{SERVER_URL}/get_balance", json=user_data)
+    # Запрос баланса и оплаты курса с сервера
+    response = requests.post(f"{SERVER_URL}/get_balance_and_paid_status", json=user_data)
     response.raise_for_status()
     data = response.json()
     balance = data.get("balance", 0)
+    paid = data.get("paid", False)
 
     await message.answer(f"balance {balance}")
 
@@ -488,6 +491,13 @@ async def get_payout(message: types.Message, telegram_id: str):
         await bot.send_message(
             message.chat.id, 
             "Ваш баланс равен 0. Вы не можете запросить выплату."
+        )
+        return
+    
+    if not(paid):
+        await bot.send_message(
+            message.chat.id, 
+            "Вы не можете стать партнёром по реферальной программе, не оплатив курс"
         )
         return
 
@@ -524,18 +534,26 @@ async def process_payout_amount(message: types.Message):
         }
 
         # Запрос баланса с сервера
-        response = requests.post(f"{SERVER_URL}/get_balance", json=user_data)
+        response = requests.post(f"{SERVER_URL}/get_balance_and_paid_status", json=user_data)
         response.raise_for_status()
         data = response.json()
         await message.answer(f"data {data}")
 
         balance = data.get("balance", 0)
+        paid = data.get("paid", False)
         await message.answer(f"balance {balance}")
 
-        if amount > balance:
+        if not(paid):
+            await bot.send_message(
+                message.chat.id, 
+                "Вы не можете стать партнёром по реферальной программе, не оплатив курс"
+            )
+            return
+
+        if amount > balance or amount <= 0 or balance <= 0:
             await message.answer(
                 f"У вас недостаточно средств. Ваш баланс: {balance:.2f} RUB. "
-                "Введите сумму, которая меньше или равна вашему балансу."
+                "Введите сумму, которая меньше или равна вашему балансу. Сумма не должна быть отрицательной"
             )
             return
 
