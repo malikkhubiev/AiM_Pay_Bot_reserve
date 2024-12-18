@@ -411,6 +411,7 @@ async def bind_card(message: types.Message, telegram_id: str):
         response = requests.post(bind_card_url, json=user_data).json()
         if response.get("status") == "error":
             await message.answer(response.get("message"))
+            return
         binding_url = response.get("binding_url")
 
         # Мусор
@@ -441,12 +442,13 @@ async def send_referral_link(message: types.Message, telegram_id: str):
 
     try:
         response = requests.post(referral_url, json=user_data).json()
-        result = response.get("referral_link")
 
-        # Мусор
-        await message.answer(f"{result['referral_link']} referral_link")
     
         if result["status"] == "success":
+            result = response.get("referral_link")
+            # Мусор
+            await message.answer(f"{result['referral_link']} referral_link")
+            
             await bot.send_video(
                 chat_id=message.chat.id,
                 video=REFERRAL_VIDEO_URL,
