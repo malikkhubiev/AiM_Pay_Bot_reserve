@@ -383,13 +383,16 @@ async def generate_clients_report(message: types.Message, telegram_id: str):
 
         # Send the list of invited users
         if invited_list:
+            await message.answer(f"{invited_list} invited_list есть")
             for invited in invited_list:
+                await message.answer(f"{invited} invited перебор начался")
                 user_status = "Оплатил" if invited["paid"] else "Не оплатил"
                 user_info = (
                     f"<b>Пользователь:</b> {invited['username']}\n"
                     f"<b>Telegram ID:</b> {invited['telegram_id']}\n"
                     f"<b>Статус:</b> {user_status}\n\n"
                 )
+                await message.answer(f"{user_info} user_info")
                 await bot.send_message(
                     chat_id=message.chat.id,
                     text=user_info,
