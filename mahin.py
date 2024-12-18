@@ -488,6 +488,7 @@ async def get_payout(message: types.Message, telegram_id: str):
     paid = data.get("paid", False)
 
     await message.answer(f"balance {balance}")
+    await message.answer(f"paid {paid}")
 
     if balance <= 0:
         await bot.send_message(
