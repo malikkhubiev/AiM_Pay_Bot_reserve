@@ -444,23 +444,23 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         response = requests.post(referral_url, json=user_data).json()
 
     
-        if result["status"] == "success":
-            result = response.get("referral_link")
+        if response["status"] == "success":
+            referral_link = response.get("referral_link")
             # Мусор
-            await message.answer(f"{result['referral_link']} referral_link")
-            
+            await message.answer(f"{referral_link} referral_link")
+
             await bot.send_video(
                 chat_id=message.chat.id,
                 video=REFERRAL_VIDEO_URL,
                 caption=(
-                    f"Отправляю тебе реферальную ссылку:\n{result['referral_link']}\n"
+                    f"Отправляю тебе реферальную ссылку:\n{referral_link}\n"
                     f"Зарабатывай, продвигая It - образование."
                 )
             )
-        elif result["status"] == "error":
-            await message.answer(result["message"])
+        elif response["status"] == "error":
+            await message.answer(response["message"])
         else:
-            await message.answer(result["Ошибка при генерации ссылки"])
+            await message.answer("Ошибка при генерации ссылки")
     except requests.RequestException as e:
         logger.error("Ошибка при отправке запроса на сервер: %s", e)
         await message.answer("Ошибка при генерации реферальной ссылки.")
