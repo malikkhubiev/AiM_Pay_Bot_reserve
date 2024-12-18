@@ -444,14 +444,14 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         result = response.get("referral_link")
 
         # Мусор
-        await message.answer(f"{result["referral_link"]} referral_link")
+        await message.answer(f"{result['referral_link']} referral_link")
     
         if result["status"] == "success":
             await bot.send_video(
                 chat_id=message.chat.id,
                 video=REFERRAL_VIDEO_URL,
                 caption=(
-                    f"Отправляю тебе реферальную ссылку:\n{result["referral_link"]}\n"
+                    f"Отправляю тебе реферальную ссылку:\n{result['referral_link']}\n"
                     f"Зарабатывай, продвигая It - образование."
                 )
             )
