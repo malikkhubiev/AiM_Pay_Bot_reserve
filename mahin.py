@@ -608,7 +608,9 @@ async def process_payout_amount(message: types.Message):
     except ValueError:
         await message.answer("Некорректный формат данных.")
 
-
+@dp.message_handler(commands=["start"])
+async def send_offer_link(message: types.Message):
+    await message.answer("Скачайте оферту по ссылке: https://yourdomain.com/offer")
 
 USE_RENDER = os.getenv("USE_RENDER", "false").lower() == "true"
 
