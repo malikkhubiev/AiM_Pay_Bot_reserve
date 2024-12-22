@@ -47,11 +47,26 @@ def web_server():
             await bot.send_message(chat_id=tg_id, text=message_text)
             return web.json_response({"status": "notification sent"}, status=200)
         return web.json_response({"error": "Invalid data"}, status=400)
+    
+    async def send_invite_link(request):
+        data = await request.json()
+        tg_id = data.get("telegram_id")
+        # Получение пригласительной ссылки для группы
+        invite_link = await bot.export_chat_invite_link(GROUP_ID)
+        
+        # Отправляем ссылку пользователю
+        await bot.send_message(
+            chat_id=tg_id,
+            text=f"Поздравляем! Ваш платёж прошёл успешно, вы оплатили курс 🎉. Вот ссылка для присоединения к нашей группе: {invite_link}",
+            parse_mode=ParseMode.MARKDOWN
+        )
+        return web.json_response({"status": "notification sent"}, status=200)
 
     app = web.Application()
     app.router.add_route("HEAD", "/", handle)
     app.router.add_route("GET", "/", handle)
     app.router.add_post("/notify_user", notify_user)
+    app.router.add_post("/send_invite_link", send_invite_link)
     return app
 
 async def start_web_server():
@@ -72,6 +87,42 @@ async def start_web_server():
 
 async def start_polling():
     await dp.start_polling()
+
+@dp.chat_member_handler()
+async def check_user_in_db(event: ChatMemberUpdated):
+    try:
+        # Проверяем, что пользователь присоединился к группе
+        if event.new_chat_member.status == 'member':  # Пользователь присоединился
+            telegram_id = event.new_chat_member.user.id
+            
+            # Проверяем, есть ли пользователь в базе данных
+            check_user_url = SERVER_URL + "/check_user"
+            user_data = {
+                "telegram_id": telegram_id
+            }
+            try:
+                response = requests.post(check_user_url, json=user_data).json()
+                
+                # Если ответ пустой или нет такого пользователя, кикаем
+                if response.get("user"):
+                    user_id = response["user"]["id"]
+                    logging.info(f"Пользователь с ID {user_id} добавлен в группу")
+                else:
+                    user_id = telegram_id
+                    await bot.kick_chat_member(event.chat.id, user_id)  # Кикаем пользователя
+                    await bot.unban_chat_member(event.chat.id, user_id)  # Разбаниваем (чтобы не остаться заблокированным)
+                    logging.info(f"Пользователь с ID {user_id} был исключён из группы, так как не найден в базе данных")
+                    return
+            except requests.RequestException as e:
+                logger.error("Ошибка при запросе к серверу: %s", e)
+                await bot.send_message(event.chat.id, "Ошибка при проверке регистрации. Пожалуйста, попробуйте позже.")
+                return
+            except KeyError:
+                logger.warning("Пользователь не зарегистрирован в базе данных.")
+                await bot.send_message(event.chat.id, "Сначала нажмите /start для регистрации.")
+                return
+    except Exception as e:
+        logger.error(f"Ошибка при обработке события: {e}")
 
 # Главное меню с кнопками
 @dp.message_handler(commands=['start'])
@@ -238,6 +289,11 @@ async def process_tax_info(callback_query: types.CallbackQuery):
 <i>Пока вы платите налоги, вы защищаете себя и делаете реферальные выплаты законными.</i>
 """
     await callback_query.message.answer(info_text, parse_mode=ParseMode.HTML)
+
+async def send_invite(message: types.Message):
+    # Отправить пригласительную ссылку
+    invite_link = await bot.export_chat_invite_link(chat_id=message.chat.id)
+    await message.reply(f"Привет! Пройди по этой ссылке, чтобы присоединиться к нашей группе: {invite_link}")
 
 @dp.message_handler(commands=['pay'])
 async def handle_pay_command(message: types.Message, telegram_id: str):
@@ -469,9 +525,6 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         await message.answer("Ошибка при генерации реферальной ссылки.")
     except KeyError:
         await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
-
-
-
 
 # Реферальные выплаты
 @dp.message_handler(commands=['get_payout'])
