@@ -16,9 +16,11 @@ from config import (
     EARN_NEW_CLIENTS_VIDEO_URL,
     START_VIDEO_URL,
     REPORT_VIDEO_URL,
-    REFERRAL_VIDEO_URL
+    REFERRAL_VIDEO_URL,
+    SECRET_CODE
 )
 import requests
+from requests.exceptions import RequestException
 bot = Bot(token=API_TOKEN)
 
 dp = Dispatcher(bot)
@@ -29,6 +31,30 @@ logger = logging.getLogger(__name__)
 
 # Применяем nest_asyncio для повторного использования цикла событий
 nest_asyncio.apply()
+
+def send_request(url, method="GET", headers=None, **kwargs):
+    if headers is None:
+        headers = {}
+    headers["X-Secret-Code"] = SECRET_CODE  # Добавляем заголовок
+    try:
+        if method.upper() == "POST":
+            response = requests.post(url, headers=headers, **kwargs)
+        elif method.upper() == "GET":
+            response = requests.get(url, headers=headers, **kwargs)
+        elif method.upper() == "PUT":
+            response = requests.put(url, headers=headers, **kwargs)
+        elif method.upper() == "DELETE":
+            response = requests.delete(url, headers=headers, **kwargs)
+        else:
+            raise ValueError(f"Unsupported HTTP method: {method}")
+        
+        # Проверяем статус ответа
+        response.raise_for_status()
+        return response.json()  # Возвращаем JSON-ответ
+    except RequestException as e:
+        # Логирование ошибок
+        logger.error(f"HTTP запрос завершился с ошибкой: {e}")
+        return None
 
 # Определение веб-сервера
 def web_server():
@@ -101,7 +127,11 @@ async def check_user_in_db(event: ChatMemberUpdated):
                 "telegram_id": telegram_id
             }
             try:
-                response = requests.post(check_user_url, json=user_data).json()
+                response = send_request(
+                    check_user_url,
+                    method="POST",
+                    json=user_data
+                ).json()
                 
                 # Если ответ пустой или нет такого пользователя, кикаем
                 if response.get("user"):
@@ -148,7 +178,11 @@ async def send_welcome(message: types.Message):
     # Мусор
     await message.answer(f"{user_data} user_data")
 
-    response = requests.post(register_or_greet_url, json=user_data).json()
+    response = send_request(
+        register_or_greet_url,
+        method="POST",
+        json=user_data
+    ).json()
     await message.answer(f"{response}")
     
     # Создаем основное меню с кнопками
@@ -163,8 +197,11 @@ async def send_welcome(message: types.Message):
     user_data = {
         "telegram_id": telegram_id,
     }
-
-    response = requests.post(check_referrals_url, json=user_data).json()
+    response = send_request(
+        check_referrals_url,
+        method="POST",
+        json=user_data
+    ).json()
     keyboard.add(InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients'))
     # referral_exists = response["has_referrals"]
     # Включить позже, а сверху выключить
@@ -313,7 +350,11 @@ async def handle_pay_command(message: types.Message, telegram_id: str):
     await message.answer(f"{user_data} user_data")
 
     try:
-        response = requests.post(check_user_url, json=user_data).json()
+        response = send_request(
+            check_user_url,
+            method="POST",
+            json=user_data
+        ).json()
         await message.answer(f"{response} response")
         user_id = response["user"]["id"]
         # Мусор
@@ -337,7 +378,11 @@ async def handle_pay_command(message: types.Message, telegram_id: str):
     # Мусор
     await message.answer(f"{payment_data} payment_data")
     try:
-        response = requests.post(create_payment_url, json=payment_data).json()
+        response = send_request(
+            create_payment_url,
+            method="POST",
+            json=user_data
+        ).json()
         payment_url = response.get("confirmation", {}).get("confirmation_url")
         # Мусор
         await message.answer(f"{payment_url} payment_url")
@@ -364,7 +409,11 @@ async def generate_overview_report(message: types.Message, telegram_id: str):
     await message.answer(f"{user_data} user_data")
 
     try:
-        response = requests.post(report_url, json=user_data).json()
+        response = send_request(
+            report_url,
+            method="POST",
+            json=user_data
+        ).json()
 
         # Формируем текст отчета на основе данных из ответа
         username = response.get("username")
@@ -415,7 +464,11 @@ async def generate_clients_report(message: types.Message, telegram_id: str):
     await message.answer(f"{user_data} user_data")
 
     try:
-        response = requests.post(report_url, json=user_data).json()
+        response = send_request(
+            report_url,
+            method="POST",
+            json=user_data
+        ).json()
 
         # Формируем текст отчета на основе данных из ответа
         username = response.get("username")
@@ -467,7 +520,11 @@ async def bind_card(message: types.Message, telegram_id: str):
     bind_card_url = SERVER_URL + "/bind_card"
     user_data = {"telegram_id": telegram_id}
     try:
-        response = requests.post(bind_card_url, json=user_data).json()
+        response = send_request(
+            bind_card_url,
+            method="POST",
+            json=user_data
+        ).json()
         if response.get("status") == "error":
             await message.answer(response.get("message"))
             return
@@ -500,8 +557,11 @@ async def send_referral_link(message: types.Message, telegram_id: str):
     await message.answer(f"{user_data} user_data")
 
     try:
-        response = requests.post(referral_url, json=user_data).json()
-
+        response = send_request(
+            referral_url,
+            method="POST",
+            json=user_data
+        ).json()
     
         if response["status"] == "success":
             referral_link = response.get("referral_link")
@@ -536,8 +596,14 @@ async def get_payout(message: types.Message, telegram_id: str):
         "telegram_id": telegram_id
     }
 
+    isAbleToGetPayout_url = f"{SERVER_URL}/isAbleToGetPayout"
+
     # Запрос баланса и оплаты курса с сервера
-    response = requests.post(f"{SERVER_URL}/isAbleToGetPayout", json=user_data)
+    response = send_request(
+        isAbleToGetPayout_url,
+        method="POST",
+        json=user_data
+    ).json()
     response.raise_for_status()
     data = response.json()
     balance = data.get("balance", 0)
@@ -601,8 +667,14 @@ async def process_payout_amount(message: types.Message):
             "telegram_id": telegram_id
         }
 
+        isAbleToGetPayout_url = f"{SERVER_URL}/isAbleToGetPayout"
+
         # Запрос баланса с сервера
-        response = requests.post(f"{SERVER_URL}/isAbleToGetPayout", json=user_data)
+        response = send_request(
+            isAbleToGetPayout_url,
+            method="POST",
+            json=user_data
+        ).json()
         response.raise_for_status()
         data = response.json()
         await message.answer(f"data {data}")
@@ -625,11 +697,17 @@ async def process_payout_amount(message: types.Message):
             )
             return
 
+        user_data = {
+            "telegram_id": telegram_id,
+            "amount": amount
+        }
+        add_payout_toDb_url = f"{SERVER_URL}/add_payout_toDb"
         # Делаем запрос к FastAPI эндпоинту для создания выплаты
-        response = requests.post(
-            f"{SERVER_URL}/add_payout_toDb",
-            json={"telegram_id": telegram_id, "amount": amount}
-        )
+        response = send_request(
+            add_payout_toDb_url,
+            method="POST",
+            json=user_data
+        ).json()
         response.raise_for_status()
         payout_data = response.json()
         await message.answer(f"payout_data {payout_data}")
@@ -639,10 +717,15 @@ async def process_payout_amount(message: types.Message):
             await message.answer(
                 f"Ваш запрос на выплату {amount:.2f} RUB принят. Выплата будет выполнена в ближайшее время."
             )
-            payout_response = requests.post(
-                f"{SERVER_URL}/make_payout",
-                json={"telegram_id": telegram_id}
-            )
+            make_payout_url = f"{SERVER_URL}/make_payout"
+            user_data = {
+                "telegram_id": telegram_id
+            }
+            payout_response = send_request(
+                make_payout_url,
+                method="POST",
+                json=user_data
+            ).json()
             payout_response.raise_for_status()
             payout_result = payout_response.json()
 
