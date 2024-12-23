@@ -374,7 +374,9 @@ async def handle_pay_command(message: types.Message, telegram_id: str):
     # Мусор
     await message.answer(f"{create_payment_url} create_payment_url")
 
-    payment_data = {"telegram_id": telegram_id, "amount": amount}
+    payment_data = {
+        "telegram_id": telegram_id
+    }
 
     # Мусор
     await message.answer(f"{payment_data} payment_data")
