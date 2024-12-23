@@ -16,8 +16,9 @@ from config import (
     EARN_NEW_CLIENTS_VIDEO_URL,
     START_VIDEO_URL,
     REPORT_VIDEO_URL,
+    SECRET_CODE,
     REFERRAL_VIDEO_URL,
-    SECRET_CODE
+    
 )
 import requests
 from requests.exceptions import RequestException

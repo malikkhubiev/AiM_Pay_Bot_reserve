@@ -30,3 +30,5 @@ REPORT_VIDEO_URL = os.getenv("REPORT_VIDEO_URL")
 REFERRAL_VIDEO_URL = os.getenv("REFERRAL_VIDEO_URL")
 
 PORT = os.getenv("PORT")
+
+SECRET_CODE = os.getenv("SECRET_CODE")
