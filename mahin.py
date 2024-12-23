@@ -3,7 +3,7 @@ import asyncio
 import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
-from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton, ChatMemberUpdated
+from aiogram.types import ParseMode, ChatInviteLink, InlineKeyboardMarkup, InlineKeyboardButton, ChatMemberUpdated
 from aiohttp import web
 import nest_asyncio
 from config import (
@@ -79,7 +79,11 @@ def web_server():
         data = await request.json()
         tg_id = data.get("telegram_id")
         # Получение пригласительной ссылки для группы
-        invite_link = await bot.export_chat_invite_link(GROUP_ID)
+        invite_link: ChatInviteLink = await bot.create_chat_invite_link(
+            chat_id=GROUP_ID,
+            expire_date=None,
+            member_limit=None
+        )
         
         # Отправляем ссылку пользователю
         await bot.send_message(
