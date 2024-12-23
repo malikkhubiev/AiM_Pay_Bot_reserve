@@ -81,8 +81,7 @@ def web_server():
         # Получение пригласительной ссылки для группы
         invite_link: ChatInviteLink = await bot.create_chat_invite_link(
             chat_id=GROUP_ID,
-            expire_date=None,
-            member_limit=None
+            member_limit=1
         )
         
         # Отправляем ссылку пользователю
