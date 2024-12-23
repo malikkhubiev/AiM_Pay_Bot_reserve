@@ -132,7 +132,7 @@ async def check_user_in_db(event: ChatMemberUpdated):
                     check_user_url,
                     method="POST",
                     json=user_data
-                ).json()
+                )
                 
                 # Если ответ пустой или нет такого пользователя, кикаем
                 if response.get("user"):
@@ -183,7 +183,7 @@ async def send_welcome(message: types.Message):
         register_or_greet_url,
         method="POST",
         json=user_data
-    ).json()
+    )
     await message.answer(f"{response}")
     
     # Создаем основное меню с кнопками
@@ -202,7 +202,7 @@ async def send_welcome(message: types.Message):
         check_referrals_url,
         method="POST",
         json=user_data
-    ).json()
+    )
     keyboard.add(InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients'))
     # referral_exists = response["has_referrals"]
     # Включить позже, а сверху выключить
@@ -355,7 +355,7 @@ async def handle_pay_command(message: types.Message, telegram_id: str):
             check_user_url,
             method="POST",
             json=user_data
-        ).json()
+        )
         await message.answer(f"{response} response")
         user_id = response["user"]["id"]
         # Мусор
@@ -383,7 +383,7 @@ async def handle_pay_command(message: types.Message, telegram_id: str):
             create_payment_url,
             method="POST",
             json=user_data
-        ).json()
+        )
         payment_url = response.get("confirmation", {}).get("confirmation_url")
         # Мусор
         await message.answer(f"{payment_url} payment_url")
@@ -414,7 +414,7 @@ async def generate_overview_report(message: types.Message, telegram_id: str):
             report_url,
             method="POST",
             json=user_data
-        ).json()
+        )
 
         # Формируем текст отчета на основе данных из ответа
         username = response.get("username")
@@ -469,7 +469,7 @@ async def generate_clients_report(message: types.Message, telegram_id: str):
             report_url,
             method="POST",
             json=user_data
-        ).json()
+        )
 
         # Формируем текст отчета на основе данных из ответа
         username = response.get("username")
@@ -525,7 +525,7 @@ async def bind_card(message: types.Message, telegram_id: str):
             bind_card_url,
             method="POST",
             json=user_data
-        ).json()
+        )
         if response.get("status") == "error":
             await message.answer(response.get("message"))
             return
@@ -562,7 +562,7 @@ async def send_referral_link(message: types.Message, telegram_id: str):
             referral_url,
             method="POST",
             json=user_data
-        ).json()
+        )
     
         if response["status"] == "success":
             referral_link = response.get("referral_link")
@@ -604,12 +604,10 @@ async def get_payout(message: types.Message, telegram_id: str):
         isAbleToGetPayout_url,
         method="POST",
         json=user_data
-    ).json()
-    response.raise_for_status()
-    data = response.json()
-    balance = data.get("balance", 0)
-    paid = data.get("paid", False)
-    isBinded = data.get("isBinded", False)
+    )
+    balance = response.get("balance", 0)
+    paid = response.get("paid", False)
+    isBinded = response.get("isBinded", False)
 
     await message.answer(f"balance {balance}")
     await message.answer(f"paid {paid}")
@@ -675,13 +673,11 @@ async def process_payout_amount(message: types.Message):
             isAbleToGetPayout_url,
             method="POST",
             json=user_data
-        ).json()
-        response.raise_for_status()
-        data = response.json()
-        await message.answer(f"data {data}")
+        )
+        await message.answer(f"data {response}")
 
-        balance = data.get("balance", 0)
-        paid = data.get("paid", False)
+        balance = response.get("balance", 0)
+        paid = response.get("paid", False)
         await message.answer(f"balance {balance}")
 
         if not(paid):
@@ -708,9 +704,8 @@ async def process_payout_amount(message: types.Message):
             add_payout_toDb_url,
             method="POST",
             json=user_data
-        ).json()
-        response.raise_for_status()
-        payout_data = response.json()
+        )
+        payout_data = response
         await message.answer(f"payout_data {payout_data}")
 
         # Обработка ответа от FastAPI
@@ -726,9 +721,8 @@ async def process_payout_amount(message: types.Message):
                 make_payout_url,
                 method="POST",
                 json=user_data
-            ).json()
-            payout_response.raise_for_status()
-            payout_result = payout_response.json()
+            )
+            payout_result = payout_response
 
             # мусор
             await message.answer(f"payout_result {payout_result}")
