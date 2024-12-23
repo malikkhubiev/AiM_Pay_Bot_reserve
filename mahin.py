@@ -85,8 +85,7 @@ def web_server():
                 chat_id=GROUP_ID,
                 member_limit=1
             )
-            logging.info("Пригласительная ссылка создана: %s", invite_link.invite_link)
-            link = invite_link["invitelink"]
+            link = invite_link.invite_link
             logging.info("Пригласительная ссылка создана: %s", link)
             # Отправляем ссылку пользователю
             await bot.send_message(
