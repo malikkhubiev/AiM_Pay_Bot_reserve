@@ -76,21 +76,28 @@ def web_server():
         return web.json_response({"error": "Invalid data"}, status=400)
     
     async def send_invite_link(request):
-        data = await request.json()
-        tg_id = data.get("telegram_id")
-        # Получение пригласительной ссылки для группы
-        invite_link: ChatInviteLink = await bot.create_chat_invite_link(
-            chat_id=GROUP_ID,
-            member_limit=1
-        )
-        link = invite_link["invitelink"]
-        # Отправляем ссылку пользователю
-        await bot.send_message(
-            chat_id=tg_id,
-            text=f"Поздравляем! Ваш платёж прошёл успешно, вы оплатили курс 🎉. Вот ссылка для присоединения к нашей группе: {link}",
-            parse_mode=ParseMode.MARKDOWN
-        )
-        return web.json_response({"status": "notification sent"}, status=200)
+        try:
+            data = await request.json()
+            tg_id = data.get("telegram_id")
+            logging.info("Начало обработки запроса...")
+            # Получение пригласительной ссылки для группы
+            invite_link: ChatInviteLink = await bot.create_chat_invite_link(
+                chat_id=GROUP_ID,
+                member_limit=1
+            )
+            logging.info("Пригласительная ссылка создана: %s", invite_link.invite_link)
+            link = invite_link["invitelink"]
+            logging.info("Пригласительная ссылка создана: %s", link)
+            # Отправляем ссылку пользователю
+            await bot.send_message(
+                chat_id=tg_id,
+                text=f"Поздравляем! Ваш платёж прошёл успешно, вы оплатили курс 🎉. Вот ссылка для присоединения к нашей группе: {link}",
+                parse_mode=ParseMode.MARKDOWN
+            )
+            return web.json_response({"status": "notification sent"}, status=200)
+        except Exception as e:
+            logging.error("Ошибка при создании ссылки: %s", e)
+            raise web.HTTPInternalServerError(text="Ошибка на стороне Telegram API")
 
     app = web.Application()
     app.router.add_route("HEAD", "/", handle)
