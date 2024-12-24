@@ -7,7 +7,6 @@ from handlers import (
     handle_pay_command,
     send_referral_link,
     bind_card,
-    get_payout,
     generate_overview_report,
     generate_clients_report
 )
@@ -50,7 +49,6 @@ async def process_earn_new_clients(callback_query: types.CallbackQuery):
     keyboard.add(
         InlineKeyboardButton("Получить реферальную ссылку", callback_data='get_referral'),
         InlineKeyboardButton("Привязать/изменить карту", callback_data='bind_card'),
-        InlineKeyboardButton("Получить выплату", callback_data='get_payout'),
         InlineKeyboardButton("Сформировать отчёт о заработке", callback_data='generate_report'),
         InlineKeyboardButton("Налоги", callback_data='tax_info')
     )
@@ -75,11 +73,6 @@ async def process_get_referral(callback_query: types.CallbackQuery):
 async def process_get_referral(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     await bind_card(callback_query.message, callback_query.from_user.id)
-
-@dp.callback_query_handler(lambda c: c.data == 'get_payout')
-async def process_get_referral(callback_query: types.CallbackQuery):
-    await bot.answer_callback_query(callback_query.id)
-    await get_payout(callback_query.message, callback_query.from_user.id)
 
 @dp.callback_query_handler(lambda c: c.data == 'generate_report')
 async def process_generate_report(callback_query: types.CallbackQuery):

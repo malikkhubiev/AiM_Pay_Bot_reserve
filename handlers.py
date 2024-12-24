@@ -39,6 +39,7 @@ async def getting_started(message: types.Message):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("Оплатить курс", callback_data='pay_course'),
+        InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients')
     )
 
     telegram_id = str(message.from_user.id)
@@ -51,7 +52,6 @@ async def getting_started(message: types.Message):
         method="POST",
         json=user_data
     )
-    keyboard.add(InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients'))
     await bot.send_video(
         chat_id=message.chat.id,
         video=START_VIDEO_URL,
