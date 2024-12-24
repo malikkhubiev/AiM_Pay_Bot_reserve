@@ -26,6 +26,7 @@ async def start(message: types.Message):
         "username": message.from_user.username or message.from_user.first_name,
         "referrer_id": message.text.split()[1] if len(message.text.split()) > 1 else ""
     }
+    await message.answer(f"user_data {user_data}")
     keyboard = InlineKeyboardMarkup(row_width=1)
     try:
         response = send_request(
@@ -33,14 +34,17 @@ async def start(message: types.Message):
             method="POST",
             json=user_data
         )
+        await message.answer(f"response {response}")
         if response["type"] == "temp_user":
+            await message.answer(f"temp")
             keyboard.add(
                 InlineKeyboardButton("Начало работы", callback_data='getting_started'),
                 InlineKeyboardButton("Документы", callback_data='pay_course'),
             )
+            await message.answer(f"sendMessage")
             await bot.send_message(
                 chat_id=message.chat.id,
-                caption="Добро пожаловать! Для начала работы с ботом вам нужно согласиться с политикой конфиденциальности и публичной офертой. Нажимая кнопку «Начало работы», вы подтверждаете своё согласие.",
+                text="Добро пожаловать! Для начала работы с ботом вам нужно согласиться с политикой конфиденциальности и публичной офертой. Нажимая кнопку «Начало работы», вы подтверждаете своё согласие.",
                 reply_markup=keyboard
             )
         elif response["type"] == "user":
