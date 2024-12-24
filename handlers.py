@@ -17,7 +17,7 @@ async def getting_started(message: types.Message):
     telegram_id = str(message.from_user.id)
     username = message.from_user.username or message.from_user.first_name
 
-    referrer_id = message.text.split()[1] if len(message.text.split()) > 1 else ""
+    referrer_id = referrer_id = message.text.split()[1] if message.text and len(message.text.split()) > 1 else ""
 
     register_or_greet_url = SERVER_URL + "/greet"
 

@@ -20,11 +20,14 @@ async def start_polling():
 async def start(message: types.Message):
     log.info(f"Получена команда /start от {message.from_user.id}")
 
+    username = message.from_user.username or message.from_user.first_name
+    referrer_id = message.text.split()[1] if message.text and len(message.text.split()) > 1 else ""
+
     start_url = SERVER_URL + "/start"
     user_data = {
         "telegram_id": message.from_user.id,
-        "username": message.from_user.username or message.from_user.first_name,
-        "referrer_id": message.text.split()[1] if len(message.text.split()) > 1 else ""
+        "username": username,
+        "referrer_id": referrer_id
     }
     await message.answer(f"user_data {user_data}")
     keyboard = InlineKeyboardMarkup(row_width=1)
