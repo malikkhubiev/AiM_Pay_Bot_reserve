@@ -20,7 +20,7 @@ async def start_polling():
 async def start(message: types.Message):
     log.info(f"Получена команда /start от {message.from_user.id}")
 
-    check_user_url = SERVER_URL + "/check_user"
+    start_url = SERVER_URL + "/start"
     user_data = {
         "telegram_id": message.from_user.id,
         "username": message.from_user.username or message.from_user.first_name,
@@ -29,7 +29,7 @@ async def start(message: types.Message):
     keyboard = InlineKeyboardMarkup(row_width=1)
     try:
         response = send_request(
-            check_user_url,
+            start_url,
             method="POST",
             json=user_data
         )
