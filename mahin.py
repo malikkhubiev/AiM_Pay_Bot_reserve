@@ -39,7 +39,7 @@ async def start(message: types.Message):
             await message.answer(f"temp")
             keyboard.add(
                 InlineKeyboardButton("Начало работы", callback_data='getting_started'),
-                InlineKeyboardButton("Документы", callback_data='pay_course'),
+                InlineKeyboardButton("Документы", callback_data='documents'),
             )
             await message.answer(f"sendMessage")
             await bot.send_message(
