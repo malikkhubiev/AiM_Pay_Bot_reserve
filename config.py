@@ -1,25 +1,23 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # Загружает переменные окружения из файла .env
+load_dotenv() 
 
 USE_RENDER = os.getenv("USE_RENDER")
 
 API_TOKEN = os.getenv("API_TOKEN")
 SERVER_URL = os.getenv("SERVER_URL")
 MAHIN_URL = os.getenv("MAHIN_URL")
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///bot_database.db")  # SQLite для локального использования, PostgreSQL для деплоя
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///bot_database.db")
 
-GROUP_NAME = os.getenv("GROUP_NAME")  # Убедитесь, что здесь используется @
+GROUP_NAME = os.getenv("GROUP_NAME")
 GROUP_ID = os.getenv("GROUP_ID")
 
 COURSE_AMOUNT = os.getenv("COURSE_AMOUNT")
 REFERRAL_AMOUNT = os.getenv("REFERRAL_AMOUNT")
 
-# Параметры логирования
-LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")  # Уровень логирования
+LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
 
-# YooKassa configuration
 YOOKASSA_SHOP_ID = os.getenv("YOOKASSA_SHOP_ID")
 YOOKASSA_SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY")
 
