@@ -17,7 +17,15 @@ def web_server():
         message_text = data.get("message")
 
         if tg_id and message_text:
-            await bot.send_message(chat_id=tg_id, text=message_text)
+            keyboard = InlineKeyboardMarkup(row_width=1)
+            keyboard.add(
+                InlineKeyboardButton("Назад", callback_data='start'),
+            )
+            await bot.send_message(
+                chat_id=tg_id,
+                text=message_text,
+                reply_markup=keyboard
+            )
             return web.json_response({"status": "notification sent"}, status=200)
         return web.json_response({"error": "Invalid data"}, status=400)
     
@@ -33,11 +41,17 @@ def web_server():
             )
             link = invite_link.invite_link
             log.info("Пригласительная ссылка создана: %s", link)
+
+            keyboard = InlineKeyboardMarkup(row_width=1)
+            keyboard.add(
+                InlineKeyboardButton("Назад", callback_data='start'),
+            )
             
             await bot.send_message(
                 chat_id=tg_id,
                 text=f"Поздравляем! Ваш платёж прошёл успешно, вы оплатили курс 🎉. Вот ссылка для присоединения к нашей группе. Обращайтесь с ней очень аккуратно. Она одноразовая и если вы воспользуетесь единственным шансом неверно, исправить ничего не получится: {link}",
-                parse_mode=ParseMode.MARKDOWN
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=keyboard
             )
             return web.json_response({"status": "notification sent"}, status=200)
         except Exception as e:
