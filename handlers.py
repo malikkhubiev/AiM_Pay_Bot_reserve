@@ -51,6 +51,11 @@ async def get_documents(message: types.Message):
         InlineKeyboardButton("Публичная оферта", callback_data='public_offer'),
         InlineKeyboardButton("Политика Конфиденциальности", callback_data='privacy_policy'),
     )
+    await bot.send_message(
+        chat_id=message.chat.id,
+        text="Внимательно прочитайте следующие документы.",
+        reply_markup=keyboard
+    )
 
 async def get_public_offer(message: types.Message):
     log.info(f"Получена команда /get_public_offer от {message.from_user.id}")
