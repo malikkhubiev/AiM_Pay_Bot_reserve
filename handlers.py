@@ -29,12 +29,8 @@ async def getting_started(message: types.Message):
     await message.answer(f"{response}")
     
     keyboard = InlineKeyboardMarkup(row_width=1)
-    
-    if response["to_show"] == "pay_course":
-        keyboard.add(
-            InlineKeyboardButton("Оплатить курс", callback_data='pay_course'),
-        )
     keyboard.add(
+        InlineKeyboardButton("Оплатить курс", callback_data='pay_course'),
         InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients')
     )
     await bot.send_video(
