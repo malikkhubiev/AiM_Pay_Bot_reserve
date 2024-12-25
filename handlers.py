@@ -15,42 +15,27 @@ async def getting_started(message: types.Message):
     await message.answer(f"hey")
 
     telegram_id = str(message.from_user.id)
-    username = message.from_user.username or message.from_user.first_name
-
-    referrer_id = referrer_id = message.text.split()[1] if message.text and len(message.text.split()) > 1 else ""
-
-    register_or_greet_url = SERVER_URL + "/greet"
-
+    getting_started_url = SERVER_URL + "/getting_started"
     user_data = {
-        "telegram_id": telegram_id,
-        "username": username,
-        "referrer_id": referrer_id
+        "telegram_id": telegram_id
     }
-
     await message.answer(f"{user_data} user_data")
 
     response = send_request(
-        register_or_greet_url,
+        getting_started_url,
         method="POST",
         json=user_data
     )
     await message.answer(f"{response}")
     
     keyboard = InlineKeyboardMarkup(row_width=1)
+    
+    if response["to_show"] == "pay_course":
+        keyboard.add(
+            InlineKeyboardButton("Оплатить курс", callback_data='pay_course'),
+        )
     keyboard.add(
-        InlineKeyboardButton("Оплатить курс", callback_data='pay_course'),
         InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients')
-    )
-
-    telegram_id = str(message.from_user.id)
-    check_referrals_url = SERVER_URL + "/check_referrals"
-    user_data = {
-        "telegram_id": telegram_id,
-    }
-    response = send_request(
-        check_referrals_url,
-        method="POST",
-        json=user_data
     )
     await bot.send_video(
         chat_id=message.chat.id,
