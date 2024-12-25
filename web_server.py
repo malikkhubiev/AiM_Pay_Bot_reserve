@@ -19,7 +19,7 @@ def web_server():
         if tg_id and message_text:
             keyboard = InlineKeyboardMarkup(row_width=1)
             keyboard.add(
-                InlineKeyboardButton("Начать зарабатывать на новых клиентах", callback_data='start'),
+                InlineKeyboardButton("Реферальная программа", callback_data='Реферальная программа'),
             )
             await bot.send_message(
                 chat_id=tg_id,
@@ -44,7 +44,7 @@ def web_server():
 
             keyboard = InlineKeyboardMarkup(row_width=1)
             keyboard.add(
-                InlineKeyboardButton("Назад", callback_data='earn_new_clients'),
+                InlineKeyboardButton("Реферальная программа", callback_data='earn_new_clients'),
             )
             
             await bot.send_message(
