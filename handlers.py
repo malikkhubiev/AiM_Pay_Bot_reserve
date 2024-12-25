@@ -72,12 +72,12 @@ async def start(message: types.Message):
         await bot.send_message(e.chat.id, "Сначала нажмите /start для регистрации.")
         return
 
-async def getting_started(message: types.Message):
+async def getting_started(message: types.Message, telegram_id: str):
     log.info(f"Получена команда /getting_started от {message.from_user.id}")
+    log.info(f"Получена команда /getting_started от {telegram_id}")
 
     await message.answer(f"hey")
 
-    telegram_id = str(message.from_user.id)
     getting_started_url = SERVER_URL + "/getting_started"
     user_data = {
         "telegram_id": telegram_id

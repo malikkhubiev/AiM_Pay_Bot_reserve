@@ -25,7 +25,7 @@ async def process_start(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == 'getting_started')
 async def process_getting_started(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
-    await getting_started(callback_query.message)
+    await getting_started(callback_query.message, callback_query.from_user.id)
 
 @dp.callback_query_handler(lambda c: c.data == 'documents')
 async def process_documents(callback_query: types.CallbackQuery):
