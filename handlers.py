@@ -9,6 +9,64 @@ from config import (
 from utils import *
 from loader import *
 
+@dp.message_handler(commands=['start'])
+async def start(message: types.Message):
+    log.info(f"Получена команда /start от {message.from_user.id}")
+
+    username = message.from_user.username or message.from_user.first_name
+    referrer_id = message.text.split()[1] if message.text and len(message.text.split()) > 1 else ""
+
+    start_url = SERVER_URL + "/start"
+    user_data = {
+        "telegram_id": message.from_user.id,
+        "username": username,
+        "referrer_id": referrer_id
+    }
+    await message.answer(f"user_data {user_data}")
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    try:
+        response = send_request(
+            start_url,
+            method="POST",
+            json=user_data
+        )
+        await message.answer(f"response {response}")
+        if response["type"] == "temp_user":
+            await message.answer(f"temp")
+            keyboard.add(
+                InlineKeyboardButton("Начало работы", callback_data='getting_started'),
+                InlineKeyboardButton("Документы", callback_data='documents'),
+            )
+            await message.answer(f"sendMessage")
+            await bot.send_message(
+                chat_id=message.chat.id,
+                text="Добро пожаловать! Для начала работы с ботом вам нужно согласиться с политикой конфиденциальности и публичной офертой. Нажимая кнопку «Начало работы», вы подтверждаете своё согласие.",
+                reply_markup=keyboard
+            )
+        elif response["type"] == "user":
+            if response["to_show"] == "pay_course":
+                keyboard.add(
+                    InlineKeyboardButton("Оплатить курс", callback_data='pay_course'),
+                )
+            keyboard.add(
+                InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients')
+            )
+            await bot.send_video(
+                chat_id=message.chat.id,
+                video=START_VIDEO_URL,
+                caption="Добро пожаловать! Здесь Вы можете оплатить курс и заработать на привлечении новых клиентов.",
+                reply_markup=keyboard
+            )
+
+    except RequestException as e:
+        logger.error("Ошибка при запросе к серверу: %s", e)
+        await bot.send_message(e.chat.id, "Ошибка при проверке регистрации. Пожалуйста, попробуйте позже.")
+        return
+    except KeyError:
+        logger.warning("Пользователь не зарегистрирован в базе данных.")
+        await bot.send_message(e.chat.id, "Сначала нажмите /start для регистрации.")
+        return
+
 async def getting_started(message: types.Message):
     log.info(f"Получена команда /getting_started от {message.from_user.id}")
 
@@ -46,6 +104,7 @@ async def get_documents(message: types.Message):
     keyboard.add(
         InlineKeyboardButton("Публичная оферта", callback_data='public_offer'),
         InlineKeyboardButton("Политика Конфиденциальности", callback_data='privacy_policy'),
+        InlineKeyboardButton("Назад", callback_data='start'),
     )
     await bot.send_message(
         chat_id=message.chat.id,

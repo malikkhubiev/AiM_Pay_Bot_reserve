@@ -1,5 +1,6 @@
 from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 from handlers import (
+    start,
     getting_started,
     get_documents,
     get_public_offer,
@@ -15,6 +16,11 @@ from config import (
     EARN_NEW_CLIENTS_VIDEO_URL,
 )
 from loader import *
+
+@dp.callback_query_handler(lambda c: c.data == 'start')
+async def process_getting_started(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    await start(callback_query.message)
 
 @dp.callback_query_handler(lambda c: c.data == 'getting_started')
 async def process_getting_started(callback_query: types.CallbackQuery):
@@ -50,7 +56,8 @@ async def process_earn_new_clients(callback_query: types.CallbackQuery):
         InlineKeyboardButton("Получить реферальную ссылку", callback_data='get_referral'),
         InlineKeyboardButton("Привязать/изменить карту", callback_data='bind_card'),
         InlineKeyboardButton("Сформировать отчёт о заработке", callback_data='generate_report'),
-        InlineKeyboardButton("Налоги", callback_data='tax_info')
+        InlineKeyboardButton("Налоги", callback_data='tax_info'),
+        InlineKeyboardButton("Назад", callback_data='/start'),
     )
 
     await bot.send_video(
@@ -81,7 +88,8 @@ async def process_generate_report(callback_query: types.CallbackQuery):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("Общая информация", callback_data='report_overview'),
-        InlineKeyboardButton("Список привлечённых клиентов", callback_data='report_clients')
+        InlineKeyboardButton("Список привлечённых клиентов", callback_data='report_clients'),
+        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
     )
 
     await bot.send_message(
