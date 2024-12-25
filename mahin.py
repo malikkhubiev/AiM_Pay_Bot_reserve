@@ -4,6 +4,7 @@ import nest_asyncio
 from loader import *
 from utils import *
 from web_server import start_web_server
+from button_handlers import *
 
 from config import (
     SERVER_URL,
