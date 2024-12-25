@@ -196,6 +196,11 @@ async def generate_overview_report(message: types.Message, telegram_id: str):
     await message.answer(f"{report_url} report_url")
     await message.answer(f"{user_data} user_data")
 
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+    )
+
     try:
         response = send_request(
             report_url,
@@ -226,14 +231,23 @@ async def generate_overview_report(message: types.Message, telegram_id: str):
             chat_id=message.chat.id,
             video=REPORT_VIDEO_URL,
             caption=report,
-            parse_mode=ParseMode.HTML
+            parse_mode=ParseMode.HTML,
+            reply_markup=keyboard
         )
 
     except RequestException as e:
         logger.error("Ошибка при отправке запроса на сервер: %s", e)
-        await message.answer("Ошибка при генерации отчета.")
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text="Ошибка при генерации отчета.",
+            reply_markup=keyboard
+        )
     except KeyError:
-        await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text="Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.",
+            reply_markup=keyboard
+        )
 
 async def generate_clients_report(message: types.Message, telegram_id: str):
     await message.answer(f"generate_clients_report")
@@ -243,6 +257,11 @@ async def generate_clients_report(message: types.Message, telegram_id: str):
     await message.answer(f"{telegram_id} telegram_id")
     await message.answer(f"{report_url} report_url")
     await message.answer(f"{user_data} user_data")
+
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+    )
 
     try:
         response = send_request(
@@ -265,7 +284,8 @@ async def generate_clients_report(message: types.Message, telegram_id: str):
             chat_id=message.chat.id,
             video=REPORT_VIDEO_URL,
             caption=report,
-            parse_mode=ParseMode.HTML
+            parse_mode=ParseMode.HTML,
+            keyboard=keyboard
         )
 
         # Send the list of invited users
@@ -288,9 +308,17 @@ async def generate_clients_report(message: types.Message, telegram_id: str):
 
     except RequestException as e:
         logger.error("Ошибка при отправке запроса на сервер: %s", e)
-        await message.answer("Ошибка при генерации отчета.")
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text="Ошибка при генерации отчета.",
+            reply_markup=keyboard
+        )
     except KeyError:
-        await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text="Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.",
+            reply_markup=keyboard
+        )
 
 async def bind_card(message: types.Message, telegram_id: str):
     bind_card_url = SERVER_URL + "/bind_card"
@@ -306,13 +334,26 @@ async def bind_card(message: types.Message, telegram_id: str):
             return
         binding_url = response.get("binding_url")
 
-        
         await message.answer(f"{binding_url} binding_url")
+
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(
+            InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+        )
+
+        text = ""
     
         if binding_url:
-            await message.answer(f"Перейдите по следующей ссылке для привязки карты: {binding_url}")
+            text = f"Перейдите по следующей ссылке для привязки карты: {binding_url}"
         else:
-            await message.answer("Ошибка при генерации ссылки.")
+            text = "Ошибка при генерации ссылки."
+        
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=text,
+            reply_markup=keyboard
+        )
+
     except RequestException as e:
         logger.error("Ошибка при отправке запроса на сервер: %s", e)
         await message.answer("Ошибка при генерации ссылки.")
@@ -334,6 +375,12 @@ async def send_referral_link(message: types.Message, telegram_id: str):
             method="POST",
             json=user_data
         )
+
+        text = ""
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(
+            InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+        )
     
         if response["status"] == "success":
             referral_link = response.get("referral_link")
@@ -346,12 +393,19 @@ async def send_referral_link(message: types.Message, telegram_id: str):
                 caption=(
                     f"Отправляю тебе реферальную ссылку:\n{referral_link}\n"
                     f"Зарабатывай, продвигая It - образование."
-                )
+                ),
+                reply_markup=keyboard
             )
+
         elif response["status"] == "error":
-            await message.answer(response["message"])
+            text = response["message"]
         else:
-            await message.answer("Ошибка при генерации ссылки")
+            text = "Ошибка при генерации ссылки"
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=text,
+            reply_markup=keyboard
+        )
     except RequestException as e:
         logger.error("Ошибка при отправке запроса на сервер: %s", e)
         await message.answer("Ошибка при генерации реферальной ссылки.")
