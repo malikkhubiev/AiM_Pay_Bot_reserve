@@ -44,7 +44,7 @@ def web_server():
 
             keyboard = InlineKeyboardMarkup(row_width=1)
             keyboard.add(
-                InlineKeyboardButton("Назад", callback_data='start'),
+                InlineKeyboardButton("Назад", callback_data='earn_new_clients'),
             )
             
             await bot.send_message(
