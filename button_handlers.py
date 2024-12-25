@@ -18,7 +18,7 @@ from config import (
 from loader import *
 
 @dp.callback_query_handler(lambda c: c.data == 'start')
-async def process_getting_started(callback_query: types.CallbackQuery):
+async def process_start(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     await start(callback_query.message)
 
