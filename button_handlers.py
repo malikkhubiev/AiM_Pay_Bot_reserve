@@ -20,7 +20,7 @@ from loader import *
 @dp.callback_query_handler(lambda c: c.data == 'start')
 async def process_start(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
-    await start(callback_query.message)
+    await start(callback_query.message, callback_query.from_user.username)
 
 @dp.callback_query_handler(lambda c: c.data == 'getting_started')
 async def process_getting_started(callback_query: types.CallbackQuery):
