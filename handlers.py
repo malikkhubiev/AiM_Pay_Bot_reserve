@@ -117,7 +117,7 @@ async def get_documents(message: types.Message):
 
 async def get_public_offer(message: types.Message):
     log.info(f"Получена команда /get_public_offer от {message.from_user.id}")
-    public_offer_url = SERVER_URL + "/privacy"
+    public_offer_url = SERVER_URL + "/public"
     await message.answer(f"Для ознакомления с Публичной офертой перейдите по ссылке: {public_offer_url}")
 
 async def get_privacy_policy(message: types.Message):

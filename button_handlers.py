@@ -57,7 +57,7 @@ async def process_earn_new_clients(callback_query: types.CallbackQuery):
         InlineKeyboardButton("Привязать/изменить карту", callback_data='bind_card'),
         InlineKeyboardButton("Сформировать отчёт о заработке", callback_data='generate_report'),
         InlineKeyboardButton("Налоги", callback_data='tax_info'),
-        InlineKeyboardButton("Назад", callback_data='/start'),
+        InlineKeyboardButton("Назад", callback_data='start'),
     )
 
     await bot.send_video(
