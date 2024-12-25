@@ -114,9 +114,13 @@ async def get_documents(message: types.Message):
 
 async def get_public_offer(message: types.Message):
     log.info(f"Получена команда /get_public_offer от {message.from_user.id}")
+    public_offer_url = SERVER_URL + "/privacy"
+    await message.answer(f"Для ознакомления с Публичной офертой перейдите по ссылке: {public_offer_url}")
 
 async def get_privacy_policy(message: types.Message):
     log.info(f"Получена команда /get_privacy_policy от {message.from_user.id}")
+    privacy_url = SERVER_URL + "/privacy"
+    await message.answer(f"Для ознакомления с Политикой конфиденциальности перейдите по ссылке: {privacy_url}")
 
 async def handle_pay_command(message: types.Message, telegram_id: str):
     amount = float(COURSE_AMOUNT)  # Пример суммы, можно заменить
