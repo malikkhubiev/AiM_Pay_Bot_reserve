@@ -117,6 +117,11 @@ async def process_tax_info(callback_query: types.CallbackQuery):
         photo=TAX_INFO_IMG_URL,
         caption="Реферальные выплаты могут облагаться налогом. Рекомендуем зарегистрироваться как самозанятый."
     )
+    
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+    )
 
     info_text = """
 <b>Как зарегистрироваться и выбрать вид деятельности для уплаты налогов:</b>
@@ -127,4 +132,9 @@ async def process_tax_info(callback_query: types.CallbackQuery):
 
 <i>Пока вы платите налоги, вы защищаете себя и делаете реферальные выплаты законными.</i>
 """
-    await callback_query.message.answer(info_text, parse_mode=ParseMode.HTML)
+    await bot.send_message(
+        chat_id=callback_query.message.chat.id,
+        text=info_text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=keyboard
+    )
