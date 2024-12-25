@@ -14,7 +14,10 @@ async def start(message: types.Message):
     log.info(f"Получена команда /start от {message.from_user.id}")
 
     username = message.from_user.username or message.from_user.first_name
-    referrer_id = message.text.split()[1] if message.text and len(message.text.split()) > 1 else ""
+    referrer_id = message.text.split(' ')[1] if len(message.text.split(' ')) > 1 else None
+
+    if referrer_id and not(referrer_id.isdigit()):
+        referrer_id = None
 
     start_url = SERVER_URL + "/start"
     user_data = {
