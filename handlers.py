@@ -22,6 +22,8 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
     if referrer_id and not(referrer_id.isdigit()):
         referrer_id = None
 
+    await message.answer(f"referrer_id {referrer_id}")
+
     start_url = SERVER_URL + "/start"
     user_data = {
         "telegram_id": telegram_id,
