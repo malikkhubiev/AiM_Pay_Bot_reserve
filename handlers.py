@@ -361,30 +361,32 @@ async def bind_card(message: types.Message, telegram_id: str):
             method="POST",
             json=user_data
         )
-        if response.get("status") == "error":
-            await message.answer(response.get("message"))
+        if response["status"] == "error":
+            await message.answer(response["message"])
             return
-        binding_url = response.get("binding_url")
+        elif response["status"] == "success":
 
-        await message.answer(f"{binding_url} binding_url")
+            binding_url = response["binding_url"]
 
-        keyboard = InlineKeyboardMarkup(row_width=1)
-        keyboard.add(
-            InlineKeyboardButton("Назад", callback_data='earn_new_clients')
-        )
+            await message.answer(f"{binding_url} binding_url")
 
-        text = ""
-    
-        if binding_url:
-            text = f"Перейдите по следующей ссылке для привязки карты: {binding_url}"
-        else:
-            text = "Ошибка при генерации ссылки."
+            keyboard = InlineKeyboardMarkup(row_width=1)
+            keyboard.add(
+                InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+            )
+
+            text = ""
         
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=text,
-            reply_markup=keyboard
-        )
+            if binding_url:
+                text = f"Перейдите по следующей ссылке для привязки карты: {binding_url}"
+            else:
+                text = "Ошибка при генерации ссылки."
+            
+            await bot.send_message(
+                chat_id=message.chat.id,
+                text=text,
+                reply_markup=keyboard
+            )
 
     except RequestException as e:
         logger.error("Ошибка при отправке запроса на сервер: %s", e)
