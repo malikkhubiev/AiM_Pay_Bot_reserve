@@ -13,6 +13,8 @@ from loader import *
 async def start(message: types.Message, telegram_id: str = None, username: str = None):
     log.info(f"Получена команда /start от {telegram_id}")
 
+    if not(telegram_id):
+        telegram_id = message.from_user.id
     if not(username):
         username = message.from_user.username or message.from_user.first_name
     referrer_id = message.text.split(' ')[1] if len(message.text.split(' ')) > 1 else None
@@ -72,7 +74,6 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
         return
     except KeyError:
         logger.warning("Пользователь не зарегистрирован в базе данных.")
-        await bot.send_message(message.chat.id, "Сначала нажмите /start для регистрации.")
         return
 
 async def getting_started(message: types.Message, telegram_id: str):
