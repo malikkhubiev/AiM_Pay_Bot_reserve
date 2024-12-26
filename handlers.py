@@ -65,11 +65,11 @@ async def start(message: types.Message, username: str = "Unset"):
 
     except RequestException as e:
         logger.error("Ошибка при запросе к серверу: %s", e)
-        await bot.send_message(e.chat.id, "Ошибка при проверке регистрации. Пожалуйста, попробуйте позже.")
+        await bot.send_message(message.chat.id, "Ошибка при проверке регистрации. Пожалуйста, попробуйте позже.")
         return
     except KeyError:
         logger.warning("Пользователь не зарегистрирован в базе данных.")
-        await bot.send_message(e.chat.id, "Сначала нажмите /start для регистрации.")
+        await bot.send_message(message.chat.id, "Сначала нажмите /start для регистрации.")
         return
 
 async def getting_started(message: types.Message, telegram_id: str):
@@ -214,7 +214,7 @@ async def generate_overview_report(message: types.Message, telegram_id: str):
 
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
-        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+        InlineKeyboardButton("Назад", callback_data='generate_report')
     )
 
     try:
@@ -276,7 +276,7 @@ async def generate_clients_report(message: types.Message, telegram_id: str):
 
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
-        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+        InlineKeyboardButton("Назад", callback_data='generate_report')
     )
 
     try:
