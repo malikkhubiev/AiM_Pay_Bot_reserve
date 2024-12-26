@@ -20,7 +20,7 @@ from loader import *
 @dp.callback_query_handler(lambda c: c.data == 'start')
 async def process_start(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
-    await start(callback_query.message, callback_query.from_user.username)
+    await start(callback_query.message, callback_query.from_user.id, callback_query.from_user.username)
 
 @dp.callback_query_handler(lambda c: c.data == 'getting_started')
 async def process_getting_started(callback_query: types.CallbackQuery):
@@ -30,17 +30,17 @@ async def process_getting_started(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == 'documents')
 async def process_documents(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
-    await get_documents(callback_query.message)
+    await get_documents(callback_query.message, callback_query.from_user.id)
 
 @dp.callback_query_handler(lambda c: c.data == 'public_offer')
 async def process_public_offer(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
-    await get_public_offer(callback_query.message)
+    await get_public_offer(callback_query.message, callback_query.from_user.id)
 
 @dp.callback_query_handler(lambda c: c.data == 'privacy_policy')
 async def process_privacy_policy(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
-    await get_privacy_policy(callback_query.message)
+    await get_privacy_policy(callback_query.message, callback_query.from_user.id)
 
 @dp.callback_query_handler(lambda c: c.data == 'pay_course')
 async def process_pay_course(callback_query: types.CallbackQuery):

@@ -10,8 +10,8 @@ from utils import *
 from loader import *
 
 @dp.message_handler(commands=['start'])
-async def start(message: types.Message, username: str = "Unset"):
-    log.info(f"Получена команда /start от {message.from_user.id}")
+async def start(message: types.Message, telegram_id: str, username: str = "Unset"):
+    log.info(f"Получена команда /start от {telegram_id}")
 
     username = message.from_user.username or message.from_user.first_name
     if username == 'AiM_Pay_Bot':  # Предположим, что это имя вашего бота
@@ -23,7 +23,7 @@ async def start(message: types.Message, username: str = "Unset"):
 
     start_url = SERVER_URL + "/start"
     user_data = {
-        "telegram_id": message.from_user.id,
+        "telegram_id": telegram_id,
         "username": username,
         "referrer_id": referrer_id
     }
@@ -73,7 +73,6 @@ async def start(message: types.Message, username: str = "Unset"):
         return
 
 async def getting_started(message: types.Message, telegram_id: str):
-    log.info(f"Получена команда /getting_started от {message.from_user.id}")
     log.info(f"Получена команда /getting_started от {telegram_id}")
 
     await message.answer(f"hey")
@@ -103,8 +102,8 @@ async def getting_started(message: types.Message, telegram_id: str):
         reply_markup=keyboard
     )
 
-async def get_documents(message: types.Message):
-    log.info(f"Получена команда /get_documents от {message.from_user.id}")
+async def get_documents(message: types.Message, telegram_id: str):
+    log.info(f"Получена команда /get_documents от {telegram_id}")
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("Публичная оферта", callback_data='public_offer'),
@@ -117,8 +116,8 @@ async def get_documents(message: types.Message):
         reply_markup=keyboard
     )
 
-async def get_public_offer(message: types.Message):
-    log.info(f"Получена команда /get_public_offer от {message.from_user.id}")
+async def get_public_offer(message: types.Message, telegram_id: str):
+    log.info(f"Получена команда /get_public_offer от {telegram_id}")
     public_offer_url = SERVER_URL + "/offer"
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
@@ -130,8 +129,8 @@ async def get_public_offer(message: types.Message):
         reply_markup=keyboard
     )
 
-async def get_privacy_policy(message: types.Message):
-    log.info(f"Получена команда /get_privacy_policy от {message.from_user.id}")
+async def get_privacy_policy(message: types.Message, telegram_id: str):
+    log.info(f"Получена команда /get_privacy_policy от {telegram_id}")
     privacy_url = SERVER_URL + "/privacy"
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
@@ -291,6 +290,7 @@ async def generate_clients_report(message: types.Message, telegram_id: str):
         invited_list = response.get("invited_list")
 
         await message.answer(f"{username} username")
+        await message.answer(f"{invited_list} invited_list")
 
         report = (
             f"<b>Отчёт для {username}:</b>\n"
@@ -301,7 +301,7 @@ async def generate_clients_report(message: types.Message, telegram_id: str):
             video=REPORT_VIDEO_URL,
             caption=report,
             parse_mode=ParseMode.HTML,
-            keyboard=keyboard
+            reply_markup=keyboard
         )
 
         # Send the list of invited users
