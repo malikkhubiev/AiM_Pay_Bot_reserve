@@ -122,7 +122,7 @@ async def get_public_offer(message: types.Message):
     public_offer_url = SERVER_URL + "/offer"
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
-        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+        InlineKeyboardButton("Назад", callback_data='documents')
     )
     await bot.send_message(
         chat_id=message.chat.id,
@@ -135,7 +135,7 @@ async def get_privacy_policy(message: types.Message):
     privacy_url = SERVER_URL + "/privacy"
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
-        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+        InlineKeyboardButton("Назад", callback_data='documents')
     )
     await bot.send_message(
         chat_id=message.chat.id,
