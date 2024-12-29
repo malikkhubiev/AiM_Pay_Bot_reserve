@@ -36,15 +36,18 @@ async def check_user_in_db(event: ChatMemberUpdated):
                 )
                 
                 # Если ответ пустой или нет такого пользователя, кикаем
-                if response.get("user"):
-                    user_id = response["user"]["id"]
-                    log.info(f"Пользователь с ID {user_id} добавлен в группу")
+                if response["status"] == "success":
+                    if response.get("user"):
+                        user_id = response["user"]["id"]
+                        log.info(f"Пользователь с ID {user_id} добавлен в группу")
+                    else:
+                        user_id = telegram_id
+                        await bot.kick_chat_member(event.chat.id, user_id)  # Кикаем пользователя
+                        await bot.unban_chat_member(event.chat.id, user_id)  # Разбаниваем (чтобы не остаться заблокированным)
+                        log.info(f"Пользователь с ID {user_id} был исключён из группы, так как не найден в базе данных")
+                        return
                 else:
-                    user_id = telegram_id
-                    await bot.kick_chat_member(event.chat.id, user_id)  # Кикаем пользователя
-                    await bot.unban_chat_member(event.chat.id, user_id)  # Разбаниваем (чтобы не остаться заблокированным)
-                    log.info(f"Пользователь с ID {user_id} был исключён из группы, так как не найден в базе данных")
-                    return
+                    log.info(response["message"])
             except RequestException as e:
                 logger.error("Ошибка при запросе к серверу: %s", e)
                 await bot.send_message(event.chat.id, "Ошибка при проверке регистрации. Пожалуйста, попробуйте позже.")

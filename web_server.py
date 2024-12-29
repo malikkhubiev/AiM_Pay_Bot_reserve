@@ -1,9 +1,10 @@
 import os
 from aiohttp import web
 from loader import *
-from utils import log
+from utils import *
 from config import (
     GROUP_ID,
+    SERVER_URL
 )
 
 def web_server():
@@ -37,22 +38,41 @@ def web_server():
             
             invite_link: ChatInviteLink = await bot.create_chat_invite_link(
                 chat_id=GROUP_ID,
-                member_limit=1
+                member_limit=1,
+                expire_date=None
             )
             link = invite_link.invite_link
             log.info("Пригласительная ссылка создана: %s", link)
 
-            keyboard = InlineKeyboardMarkup(row_width=1)
-            keyboard.add(
-                InlineKeyboardButton("Реферальная программа", callback_data='earn_new_clients'),
-            )
+            # Проверяем, есть ли пользователь в базе данных
+            check_user_url = SERVER_URL + "/save_invite_link"
+            user_data = {
+                "telegram_id": tg_id,
+                "invite_link": invite_link
+            }
+            try:
+                response = send_request(
+                    check_user_url,
+                    method="POST",
+                    json=user_data
+                )
+            except RequestException as e:
+                logger.error("Ошибка при запросе к серверу: %s", e)
+                await bot.send_message(e.chat.id, "Ошибка при генерации пригласительной ссылки. Пожалуйста, попробуйте позже.")
+                return
             
-            await bot.send_message(
-                chat_id=tg_id,
-                text=f"Поздравляем! Ваш платёж прошёл успешно, вы оплатили курс 🎉. Вот ссылка для присоединения к нашей группе. Обращайтесь с ней очень аккуратно. Она одноразовая и если вы воспользуетесь единственным шансом неверно, исправить ничего не получится: {link}",
-                reply_markup=keyboard
-            )
-            return web.json_response({"status": "notification sent"}, status=200)
+            if response["status"] == "success":
+                keyboard = InlineKeyboardMarkup(row_width=1)
+                keyboard.add(
+                    InlineKeyboardButton("Реферальная программа", callback_data='earn_new_clients'),
+                )
+                
+                await bot.send_message(
+                    chat_id=tg_id,
+                    text=f"Поздравляем! Ваш платёж прошёл успешно, вы оплатили курс 🎉. Вот ссылка для присоединения к нашей группе. Обращайтесь с ней очень аккуратно. Она одноразовая и если вы воспользуетесь единственным шансом неверно, исправить ничего не получится: {link}",
+                    reply_markup=keyboard
+                )
+                return web.json_response({"status": "notification sent"}, status=200)
         except Exception as e:
             log.error("Ошибка при создании ссылки: %s", e)
             raise web.HTTPInternalServerError(text="Ошибка на стороне Telegram API")
