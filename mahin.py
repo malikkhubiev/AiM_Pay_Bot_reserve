@@ -4,7 +4,7 @@ import nest_asyncio
 from loader import *
 from utils import *
 from web_server import start_web_server
-from button_handlers import *
+from button_handlers import register_callback_handlers
 
 from config import (
     SERVER_URL,
@@ -12,6 +12,8 @@ from config import (
 )
 
 nest_asyncio.apply()
+
+register_callback_handlers(dp)
 
 async def start_polling():
     await dp.start_polling()

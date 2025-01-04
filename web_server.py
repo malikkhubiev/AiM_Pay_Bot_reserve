@@ -48,7 +48,7 @@ def web_server():
             check_user_url = SERVER_URL + "/save_invite_link"
             user_data = {
                 "telegram_id": tg_id,
-                "invite_link": invite_link
+                "invite_link": link
             }
             try:
                 response = send_request(

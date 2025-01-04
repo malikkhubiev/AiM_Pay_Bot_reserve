@@ -4,6 +4,7 @@ from config import (
 import logging as log
 import requests as req
 from requests.exceptions import RequestException
+from loader import *
 # Установим базовый уровень логирования
 log.basicConfig(level=log.DEBUG)
 logger = log.getLogger(__name__)

@@ -5,6 +5,8 @@ from config import (
     START_VIDEO_URL,
     REPORT_VIDEO_URL,
     REFERRAL_VIDEO_URL,
+    EARN_NEW_CLIENTS_VIDEO_URL,
+    TAX_INFO_IMG_URL
 )
 from utils import *
 from loader import *
@@ -451,3 +453,65 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         await message.answer("Ошибка при генерации реферальной ссылки.")
     except KeyError:
         await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
+
+async def earn_new_clients(message: types.Message, telegram_id: str):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton("Получить реферальную ссылку", callback_data='get_referral'),
+        InlineKeyboardButton("Привязать/изменить карту", callback_data='bind_card'),
+        InlineKeyboardButton("Сформировать отчёт о заработке", callback_data='generate_report'),
+        InlineKeyboardButton("Налоги", callback_data='tax_info'),
+        InlineKeyboardButton("Назад", callback_data='start'),
+    )
+
+    await bot.send_video(
+        chat_id=message.chat.id,
+        video=EARN_NEW_CLIENTS_VIDEO_URL,
+        caption="Курс стоит 6000 рублей.\nЗа каждого привлечённого вами клиента вы заработаете 2000 рублей.\nПосле 3-х клиентов курс становится для Вас бесплатным.\nНачиная с 4-го клиента, вы начинаете зарабатывать на продвижении It-образования."
+    )
+    await bot.send_message(
+        message.chat.id,
+        "Отправляйте рекламные сообщения в тематические чаты по изучению программирования, а также в телеграм-группы различных российских вузов и вы можете выйти на прибыль в 100.000 рублей после привлечения 50 клиентов.",
+        reply_markup=keyboard
+    )
+
+async def generate_report(message: types.Message, telegram_id: str):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton("Общая информация", callback_data='report_overview'),
+        InlineKeyboardButton("Список привлечённых клиентов", callback_data='report_clients'),
+        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+    )
+    await bot.send_message(
+        chat_id=message.chat.id,
+        text="Какой отчёт вы хотите сформировать?",
+        reply_markup=keyboard
+    )
+
+async def get_tax_info(message: types.Message, telegram_id: str):
+    await bot.send_photo(
+        chat_id=message.chat.id,
+        photo=TAX_INFO_IMG_URL,
+        caption="Реферальные выплаты могут облагаться налогом. Рекомендуем зарегистрироваться как самозанятый."
+    )
+    
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+    )
+
+    info_text = """
+    <b>Как зарегистрироваться и выбрать вид деятельности для уплаты налогов:</b>
+
+    1. Информацию о способах регистрации и не только вы можете найти на официальном сайте <a href="https://npd.nalog.ru/app/">npd.nalog.ru/app</a>.
+    
+    2. При выборе вида деятельности рекомендуем указать: «Реферальные выплаты» или «Услуги».
+
+    <i>Пока вы платите налоги, вы защищаете себя и делаете реферальные выплаты законными.</i>
+    """
+    await bot.send_message(
+        chat_id=message.chat.id,
+        text=info_text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=keyboard
+    )
