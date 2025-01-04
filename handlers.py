@@ -84,7 +84,7 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
         logger.warning("Пользователь не зарегистрирован в базе данных.")
         return
 
-async def getting_started(message: types.Message, telegram_id: str):
+async def getting_started(message: types.Message, telegram_id: str, u_name: str = None):
     log.info(f"Получена команда /getting_started от {telegram_id}")
 
     await message.answer(f"hey")
@@ -117,7 +117,7 @@ async def getting_started(message: types.Message, telegram_id: str):
         reply_markup=keyboard
     )
 
-async def get_documents(message: types.Message, telegram_id: str):
+async def get_documents(message: types.Message, telegram_id: str, u_name: str = None):
     log.info(f"Получена команда /get_documents от {telegram_id}")
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
@@ -131,7 +131,7 @@ async def get_documents(message: types.Message, telegram_id: str):
         reply_markup=keyboard
     )
 
-async def get_public_offer(message: types.Message, telegram_id: str):
+async def get_public_offer(message: types.Message, telegram_id: str, u_name: str = None):
     log.info(f"Получена команда /get_public_offer от {telegram_id}")
     public_offer_url = SERVER_URL + "/offer"
     keyboard = InlineKeyboardMarkup(row_width=1)
@@ -144,7 +144,7 @@ async def get_public_offer(message: types.Message, telegram_id: str):
         reply_markup=keyboard
     )
 
-async def get_privacy_policy(message: types.Message, telegram_id: str):
+async def get_privacy_policy(message: types.Message, telegram_id: str, u_name: str = None):
     log.info(f"Получена команда /get_privacy_policy от {telegram_id}")
     privacy_url = SERVER_URL + "/privacy"
     keyboard = InlineKeyboardMarkup(row_width=1)
@@ -157,7 +157,7 @@ async def get_privacy_policy(message: types.Message, telegram_id: str):
         reply_markup=keyboard
     )
 
-async def handle_pay_command(message: types.Message, telegram_id: str):
+async def handle_pay_command(message: types.Message, telegram_id: str, u_name: str = None):
     amount = float(COURSE_AMOUNT)  # Пример суммы, можно заменить
     
     await message.answer(f"{amount} amount")
@@ -221,7 +221,7 @@ async def handle_pay_command(message: types.Message, telegram_id: str):
         logger.error("Ошибка при отправке запроса на сервер: %s", e)
         await message.answer("Ошибка при обработке платежа.")
 
-async def generate_overview_report(message: types.Message, telegram_id: str):
+async def generate_overview_report(message: types.Message, telegram_id: str, u_name: str = None):
     await message.answer(f"generate_overview_report")
     overview_report_url = SERVER_URL + "/generate_overview_report"
     user_data = {"telegram_id": telegram_id}
@@ -285,7 +285,7 @@ async def generate_overview_report(message: types.Message, telegram_id: str):
             reply_markup=keyboard
         )
 
-async def generate_clients_report(message: types.Message, telegram_id: str):
+async def generate_clients_report(message: types.Message, telegram_id: str, u_name: str = None):
     await message.answer(f"generate_clients_report")
     clients_report_url = SERVER_URL + "/generate_clients_report"
     user_data = {"telegram_id": telegram_id}
@@ -360,7 +360,7 @@ async def generate_clients_report(message: types.Message, telegram_id: str):
             reply_markup=keyboard
         )
 
-async def bind_card(message: types.Message, telegram_id: str):
+async def bind_card(message: types.Message, telegram_id: str, u_name: str = None):
     bind_card_url = SERVER_URL + "/bind_card"
     user_data = {"telegram_id": telegram_id}
     try:
@@ -402,7 +402,7 @@ async def bind_card(message: types.Message, telegram_id: str):
     except KeyError:
         await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
 
-async def send_referral_link(message: types.Message, telegram_id: str):
+async def send_referral_link(message: types.Message, telegram_id: str, u_name: str = None):
     await message.answer(f"send_referral_link")
     referral_url = SERVER_URL + "/get_referral_link"
     user_data = {"telegram_id": telegram_id}
@@ -454,7 +454,7 @@ async def send_referral_link(message: types.Message, telegram_id: str):
     except KeyError:
         await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
 
-async def earn_new_clients(message: types.Message, telegram_id: str):
+async def earn_new_clients(message: types.Message, telegram_id: str, u_name: str = None):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("Получить реферальную ссылку", callback_data='get_referral'),
@@ -475,7 +475,7 @@ async def earn_new_clients(message: types.Message, telegram_id: str):
         reply_markup=keyboard
     )
 
-async def generate_report(message: types.Message, telegram_id: str):
+async def generate_report(message: types.Message, telegram_id: str, u_name: str = None):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("Общая информация", callback_data='report_overview'),
@@ -488,7 +488,7 @@ async def generate_report(message: types.Message, telegram_id: str):
         reply_markup=keyboard
     )
 
-async def get_tax_info(message: types.Message, telegram_id: str):
+async def get_tax_info(message: types.Message, telegram_id: str, u_name: str = None):
     await bot.send_photo(
         chat_id=message.chat.id,
         photo=TAX_INFO_IMG_URL,
