@@ -31,7 +31,7 @@ async def check_user_in_db(event: ChatMemberUpdated):
             user_data = {
                 "telegram_id": telegram_id
             }
-            response = send_request(
+            response = await send_request(
                 check_user_url,
                 method="POST",
                 json=user_data

@@ -50,16 +50,11 @@ def web_server():
                 "telegram_id": tg_id,
                 "invite_link": link
             }
-            try:
-                response = send_request(
-                    check_user_url,
-                    method="POST",
-                    json=user_data
-                )
-            except RequestException as e:
-                logger.error("Ошибка при запросе к серверу: %s", e)
-                await bot.send_message(e.chat.id, "Ошибка при генерации пригласительной ссылки. Пожалуйста, попробуйте позже.")
-                return
+            response = await send_request(
+                check_user_url,
+                method="POST",
+                json=user_data
+            )
             
             if response["status"] == "success":
                 keyboard = InlineKeyboardMarkup(row_width=1)

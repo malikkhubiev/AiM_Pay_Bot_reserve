@@ -46,7 +46,7 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
     await message.answer(f"user_data {user_data}")
     keyboard = InlineKeyboardMarkup(row_width=1)
 
-    response = send_request(
+    response = await send_request(
         start_url,
         method="POST",
         json=user_data
@@ -98,7 +98,7 @@ async def getting_started(message: types.Message, telegram_id: str, u_name: str 
     }
     await message.answer(f"{user_data} user_data")
 
-    response = send_request(
+    response = await send_request(
         getting_started_url,
         method="POST",
         json=user_data
@@ -173,7 +173,7 @@ async def handle_pay_command(message: types.Message, telegram_id: str, u_name: s
     user_data = {"telegram_id": telegram_id}
     await message.answer(f"{user_data} user_data")
 
-    response = send_request(
+    response = await send_request(
         check_user_url,
         method="POST",
         json=user_data
@@ -194,7 +194,7 @@ async def handle_pay_command(message: types.Message, telegram_id: str, u_name: s
         }
 
         await message.answer(f"{payment_data} payment_data")
-        response = send_request(
+        response = await send_request(
             create_payment_url,
             method="POST",
             json=user_data
@@ -230,7 +230,7 @@ async def generate_overview_report(message: types.Message, telegram_id: str, u_n
         InlineKeyboardButton("Назад", callback_data='generate_report')
     )
 
-    response = send_request(
+    response = await send_request(
         overview_report_url,
         method="POST",
         json=user_data
@@ -280,7 +280,7 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
         InlineKeyboardButton("Назад", callback_data='generate_report')
     )
 
-    response = send_request(
+    response = await send_request(
         clients_report_url,
         method="POST",
         json=user_data
@@ -329,7 +329,7 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
 async def bind_card(message: types.Message, telegram_id: str, u_name: str = None):
     bind_card_url = SERVER_URL + "/bind_card"
     user_data = {"telegram_id": telegram_id}
-    response = send_request(
+    response = await send_request(
         bind_card_url,
         method="POST",
         json=user_data
@@ -370,7 +370,7 @@ async def send_referral_link(message: types.Message, telegram_id: str, u_name: s
     await message.answer(f"{referral_url} referral_url")
     await message.answer(f"{user_data} user_data")
 
-    response = send_request(
+    response = await send_request(
         referral_url,
         method="POST",
         json=user_data
@@ -421,7 +421,7 @@ async def send_invite_link(message: types.Message, telegram_id: str, u_name: str
 
     await message.answer(f"{user_data} user_data")
 
-    response = send_request(
+    response = await send_request(
         invite_url,
         method="POST",
         json=user_data
