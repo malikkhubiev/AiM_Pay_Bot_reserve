@@ -8,6 +8,7 @@ from config import (
     EARN_NEW_CLIENTS_VIDEO_URL,
     TAX_INFO_IMG_URL
 )
+from analytics import send_event_to_ga4
 from utils import *
 from loader import *
 
@@ -25,11 +26,15 @@ def init_user_cache(telegram_id: str):
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message, telegram_id: str = None, username: str = None):
     log.info(f"Получена команда /start от {telegram_id}")
-
+    
     if not(telegram_id):
         telegram_id = message.from_user.id
     if not(username):
         username = message.from_user.username or message.from_user.first_name
+    
+    # Пример использования
+    send_event_to_ga4(telegram_id, "interaction", "start_click")
+    
     referrer_id = message.text.split(' ')[1] if len(message.text.split(' ')) > 1 else None
 
     if referrer_id and not(referrer_id.isdigit()):
