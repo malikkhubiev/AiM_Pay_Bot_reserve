@@ -7,13 +7,14 @@ from web_server import start_web_server
 from button_handlers import register_callback_handlers
 
 from config import (
-    SERVER_URL,
-    START_VIDEO_URL
+    SERVER_URL
 )
 
 nest_asyncio.apply()
 
 register_callback_handlers(dp)
+
+dp.middleware.setup(ThrottlingMiddleware(rate_limit=2)) 
 
 async def start_polling():
     await dp.start_polling()
@@ -30,34 +31,25 @@ async def check_user_in_db(event: ChatMemberUpdated):
             user_data = {
                 "telegram_id": telegram_id
             }
-            try:
-                response = send_request(
-                    check_user_url,
-                    method="POST",
-                    json=user_data
-                )
-                
-                # Если ответ пустой или нет такого пользователя, кикаем
-                if response["status"] == "success":
-                    if response.get("user"):
-                        user_id = response["user"]["id"]
-                        log.info(f"Пользователь с ID {user_id} добавлен в группу")
-                    else:
-                        user_id = telegram_id
-                        await bot.kick_chat_member(event.chat.id, user_id)  # Кикаем пользователя
-                        await bot.unban_chat_member(event.chat.id, user_id)  # Разбаниваем (чтобы не остаться заблокированным)
-                        log.info(f"Пользователь с ID {user_id} был исключён из группы, так как не найден в базе данных")
-                        return
+            response = send_request(
+                check_user_url,
+                method="POST",
+                json=user_data
+            )
+            
+            # Если ответ пустой или нет такого пользователя, кикаем
+            if response["status"] == "success":
+                if response.get("user"):
+                    user_id = response["user"]["id"]
+                    log.info(f"Пользователь с ID {user_id} добавлен в группу")
                 else:
-                    log.info(response["message"])
-            except RequestException as e:
-                logger.error("Ошибка при запросе к серверу: %s", e)
-                await bot.send_message(event.chat.id, "Ошибка при проверке регистрации. Пожалуйста, попробуйте позже.")
-                return
-            except KeyError:
-                logger.warning("Пользователь не зарегистрирован в базе данных.")
-                await bot.send_message(event.chat.id, "Сначала нажмите /start для регистрации.")
-                return
+                    user_id = telegram_id
+                    await bot.kick_chat_member(event.chat.id, user_id)  # Кикаем пользователя
+                    await bot.unban_chat_member(event.chat.id, user_id)  # Разбаниваем (чтобы не остаться заблокированным)
+                    log.info(f"Пользователь с ID {user_id} был исключён из группы, так как не найден в базе данных")
+                    return
+            else:
+                log.info(response["message"])
     except Exception as e:
         logger.error(f"Ошибка при обработке события: {e}")
 

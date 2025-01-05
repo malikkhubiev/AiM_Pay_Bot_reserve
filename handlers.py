@@ -11,6 +11,17 @@ from config import (
 from utils import *
 from loader import *
 
+# Кэш для хранения ссылок
+links_cache = {}
+
+# Функция для инициализации словаря кэша, если его ещё нет
+def init_user_cache(telegram_id: str):
+    if telegram_id not in links_cache:
+        links_cache[telegram_id] = {
+            'invite_link': None,
+            'referral_link': None
+        }
+
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message, telegram_id: str = None, username: str = None):
     log.info(f"Получена команда /start от {telegram_id}")
@@ -34,17 +45,15 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
     }
     await message.answer(f"user_data {user_data}")
     keyboard = InlineKeyboardMarkup(row_width=1)
-    try:
-        response = send_request(
-            start_url,
-            method="POST",
-            json=user_data
-        )
-        await message.answer(f"response {response}")
-        
-        if response["status"] == "error":
-            await message.answer(response["message"])
 
+    response = send_request(
+        start_url,
+        method="POST",
+        json=user_data
+    )
+    await message.answer(f"response {response}")
+
+    if response["status"] == "success":
         if response["type"] == "temp_user":
             await message.answer(f"temp")
             keyboard.add(
@@ -64,7 +73,7 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
                 )
             else:
                 keyboard.add(
-                    InlineKeyboardButton("Получить ссылку", callback_data='get_own_link'),
+                    InlineKeyboardButton("Получить ссылку", callback_data='get_invite_link'),
                 )
             keyboard.add(
                 InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients')
@@ -75,14 +84,8 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
                 caption="Добро пожаловать! Здесь Вы можете оплатить курс и заработать на привлечении новых клиентов.",
                 reply_markup=keyboard
             )
-
-    except RequestException as e:
-        logger.error("Ошибка при запросе к серверу: %s", e)
-        await bot.send_message(message.chat.id, "Ошибка при проверке регистрации. Пожалуйста, попробуйте позже.")
-        return
-    except KeyError:
-        logger.warning("Пользователь не зарегистрирован в базе данных.")
-        return
+    elif response["status"] == "error":
+        await message.answer(response["message"])
 
 async def getting_started(message: types.Message, telegram_id: str, u_name: str = None):
     log.info(f"Получена команда /getting_started от {telegram_id}")
@@ -101,21 +104,21 @@ async def getting_started(message: types.Message, telegram_id: str, u_name: str 
         json=user_data
     )
     await message.answer(f"{response}")
-    
-    if response["status"] == "error":
-        await message.answer(response["message"])
 
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton("Оплатить курс", callback_data='pay_course'),
-        InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients')
-    )
-    await bot.send_video(
-        chat_id=message.chat.id,
-        video=START_VIDEO_URL,
-        caption="Добро пожаловать! Здесь Вы можете оплатить курс и заработать на привлечении новых клиентов.",
-        reply_markup=keyboard
-    )
+    if response["status"] == "success":
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(
+            InlineKeyboardButton("Оплатить курс", callback_data='pay_course'),
+            InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients')
+        )
+        await bot.send_video(
+            chat_id=message.chat.id,
+            video=START_VIDEO_URL,
+            caption="Добро пожаловать! Здесь Вы можете оплатить курс и заработать на привлечении новых клиентов.",
+            reply_markup=keyboard
+        )
+    elif response["status"] == "error":
+        await message.answer(response["message"])
 
 async def get_documents(message: types.Message, telegram_id: str, u_name: str = None):
     log.info(f"Получена команда /get_documents от {telegram_id}")
@@ -170,44 +173,34 @@ async def handle_pay_command(message: types.Message, telegram_id: str, u_name: s
     user_data = {"telegram_id": telegram_id}
     await message.answer(f"{user_data} user_data")
 
-    try:
-        response = send_request(
-            check_user_url,
-            method="POST",
-            json=user_data
-        )
+    response = send_request(
+        check_user_url,
+        method="POST",
+        json=user_data
+    )
+
+    if response["status"] == "success":
         await message.answer(f"{response} response")
         user_id = response["user"]["id"]
         
         await message.answer(f"{user_id} user_id")
-    except RequestException as e:
-        logger.error("Ошибка при проверке пользователя: %s", e)
-        await message.answer("Ошибка при проверке регистрации. Пожалуйста, попробуйте позже.")
-        return
-    except KeyError:
-        logger.warning("Пользователь не зарегистрирован, запрос /pay отклонён.")
-        await message.answer("Сначала нажмите /start для регистрации.")
-        return
 
-    # Шаг 2: Отправка запроса на создание платежа
-    create_payment_url = SERVER_URL + "/create_payment"
-    await message.answer(f"{create_payment_url} create_payment_url")
+        # Шаг 2: Отправка запроса на создание платежа
+        create_payment_url = SERVER_URL + "/create_payment"
+        await message.answer(f"{create_payment_url} create_payment_url")
 
-    payment_data = {
-        "telegram_id": telegram_id
-    }
+        payment_data = {
+            "telegram_id": telegram_id
+        }
 
-    await message.answer(f"{payment_data} payment_data")
-    try:
+        await message.answer(f"{payment_data} payment_data")
         response = send_request(
             create_payment_url,
             method="POST",
             json=user_data
         )
 
-        if response["status"] == "error":
-            await message.answer(response["message"])
-        elif response["status"] == "success":
+        if response["status"] == "success":
             payment_url = response.get("confirmation", {}).get("confirmation_url")
             
             await message.answer(f"{payment_url} payment_url")
@@ -217,9 +210,11 @@ async def handle_pay_command(message: types.Message, telegram_id: str, u_name: s
             else:
                 logger.error("Ошибка: Confirmation URL отсутствует в ответе сервера.")
                 await message.answer("Ошибка при создании ссылки для оплаты.")
-    except RequestException as e:
-        logger.error("Ошибка при отправке запроса на сервер: %s", e)
-        await message.answer("Ошибка при обработке платежа.")
+        elif response["status"] == "error":
+            await message.answer(response["message"])
+    elif response["status"] == "error":
+        await message.answer(response["message"])
+
 
 async def generate_overview_report(message: types.Message, telegram_id: str, u_name: str = None):
     await message.answer(f"generate_overview_report")
@@ -235,55 +230,41 @@ async def generate_overview_report(message: types.Message, telegram_id: str, u_n
         InlineKeyboardButton("Назад", callback_data='generate_report')
     )
 
-    try:
-        response = send_request(
-            overview_report_url,
-            method="POST",
-            json=user_data
+    response = send_request(
+        overview_report_url,
+        method="POST",
+        json=user_data
+    )
+
+    if response["status"] == "success":
+        # Формируем текст отчета на основе данных из ответа
+        username = response.get("username")
+        referral_count = response.get("referral_count")
+        total_payout = response.get("total_payout")
+        paid_count = response.get("paid_count")
+        paid_percentage = response.get("paid_percentage")
+
+        
+        await message.answer(f"{username} username")
+        await message.answer(f"{referral_count} referral_count")
+        await message.answer(f"{total_payout} total_payout")
+
+        report = (
+            f"<b>Отчёт для {username}:</b>\n\n"
+            f"Привлечённые пользователи: {referral_count}\n"
+            f"Оплатили курс: {paid_count} ({paid_percentage:.2f}%)\n"
+            f"Общее количество заработанных денег: {total_payout:.2f} руб.\n"
         )
 
-        if response["status"] == "error":
-            await message.answer(response["message"])
-        elif response["status"] == "success":
-            # Формируем текст отчета на основе данных из ответа
-            username = response.get("username")
-            referral_count = response.get("referral_count")
-            total_payout = response.get("total_payout")
-            paid_count = response.get("paid_count")
-            paid_percentage = response.get("paid_percentage")
-
-            
-            await message.answer(f"{username} username")
-            await message.answer(f"{referral_count} referral_count")
-            await message.answer(f"{total_payout} total_payout")
-
-            report = (
-                f"<b>Отчёт для {username}:</b>\n\n"
-                f"Привлечённые пользователи: {referral_count}\n"
-                f"Оплатили курс: {paid_count} ({paid_percentage:.2f}%)\n"
-                f"Общее количество заработанных денег: {total_payout:.2f} руб.\n"
-            )
-
-            await bot.send_video(
-                chat_id=message.chat.id,
-                video=REPORT_VIDEO_URL,
-                caption=report,
-                parse_mode=ParseMode.HTML,
-                reply_markup=keyboard
-            )
-    except RequestException as e:
-        logger.error("Ошибка при отправке запроса на сервер: %s", e)
-        await bot.send_message(
+        await bot.send_video(
             chat_id=message.chat.id,
-            text="Ошибка при генерации отчета.",
+            video=REPORT_VIDEO_URL,
+            caption=report,
+            parse_mode=ParseMode.HTML,
             reply_markup=keyboard
         )
-    except KeyError:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text="Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.",
-            reply_markup=keyboard
-        )
+    elif response["status"] == "error":
+        await message.answer(response["message"])
 
 async def generate_clients_report(message: types.Message, telegram_id: str, u_name: str = None):
     await message.answer(f"generate_clients_report")
@@ -299,111 +280,89 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
         InlineKeyboardButton("Назад", callback_data='generate_report')
     )
 
-    try:
-        response = send_request(
-            clients_report_url,
-            method="POST",
-            json=user_data
+    response = send_request(
+        clients_report_url,
+        method="POST",
+        json=user_data
+    )
+
+    if response["status"] == "success":
+        # Формируем текст отчета на основе данных из ответа
+        username = response.get("username")
+        invited_list = response.get("invited_list")
+
+        await message.answer(f"{username} username")
+        await message.answer(f"{invited_list} invited_list")
+
+        report = (
+            f"<b>Отчёт для {username}:</b>\n"
         )
 
-        if response["status"] == "error":
-            await message.answer(response["message"])
-        elif response["status"] == "success":
-            # Формируем текст отчета на основе данных из ответа
-            username = response.get("username")
-            invited_list = response.get("invited_list")
-
-            await message.answer(f"{username} username")
-            await message.answer(f"{invited_list} invited_list")
-
-            report = (
-                f"<b>Отчёт для {username}:</b>\n"
-            )
-
-            await bot.send_video(
-                chat_id=message.chat.id,
-                video=REPORT_VIDEO_URL,
-                caption=report,
-                parse_mode=ParseMode.HTML,
-                reply_markup=keyboard
-            )
-
-            # Send the list of invited users
-            if invited_list:
-                await message.answer(f"{invited_list} invited_list есть")
-                for invited in invited_list:
-                    await message.answer(f"{invited} invited перебор начался")
-                    user_status = "Оплатил" if invited["paid"] else "Не оплатил"
-                    user_info = (
-                        f"<b>Пользователь:</b> {invited['username']}\n"
-                        f"<b>Telegram ID:</b> {invited['telegram_id']}\n"
-                        f"<b>Статус:</b> {user_status}\n\n"
-                    )
-                    await message.answer(f"{user_info} user_info")
-                    await bot.send_message(
-                        chat_id=message.chat.id,
-                        text=user_info,
-                        parse_mode=ParseMode.HTML
-                    )
-
-    except RequestException as e:
-        logger.error("Ошибка при отправке запроса на сервер: %s", e)
-        await bot.send_message(
+        await bot.send_video(
             chat_id=message.chat.id,
-            text="Ошибка при генерации отчета.",
+            video=REPORT_VIDEO_URL,
+            caption=report,
+            parse_mode=ParseMode.HTML,
             reply_markup=keyboard
         )
-    except KeyError:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text="Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.",
-            reply_markup=keyboard
-        )
+
+        # Send the list of invited users
+        if invited_list:
+            await message.answer(f"{invited_list} invited_list есть")
+            for invited in invited_list:
+                await message.answer(f"{invited} invited перебор начался")
+                user_status = "Оплатил" if invited["paid"] else "Не оплатил"
+                user_info = (
+                    f"<b>Пользователь:</b> {invited['username']}\n"
+                    f"<b>Telegram ID:</b> {invited['telegram_id']}\n"
+                    f"<b>Статус:</b> {user_status}\n\n"
+                )
+                await message.answer(f"{user_info} user_info")
+                await bot.send_message(
+                    chat_id=message.chat.id,
+                    text=user_info,
+                    parse_mode=ParseMode.HTML
+                )
+    elif response["status"] == "error":
+        await message.answer(response["message"])
 
 async def bind_card(message: types.Message, telegram_id: str, u_name: str = None):
     bind_card_url = SERVER_URL + "/bind_card"
     user_data = {"telegram_id": telegram_id}
-    try:
-        response = send_request(
-            bind_card_url,
-            method="POST",
-            json=user_data
+    response = send_request(
+        bind_card_url,
+        method="POST",
+        json=user_data
+    )
+    if response["status"] == "success":
+        binding_url = response["binding_url"]
+        await message.answer(f"{binding_url} binding_url")
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(
+            InlineKeyboardButton("Назад", callback_data='earn_new_clients')
         )
-        if response["status"] == "error":
-            await message.answer(response["message"])
-            return
-        elif response["status"] == "success":
-
-            binding_url = response["binding_url"]
-
-            await message.answer(f"{binding_url} binding_url")
-
-            keyboard = InlineKeyboardMarkup(row_width=1)
-            keyboard.add(
-                InlineKeyboardButton("Назад", callback_data='earn_new_clients')
-            )
-
-            text = ""
-        
-            if binding_url:
-                text = f"Перейдите по следующей ссылке для привязки карты: {binding_url}"
-            else:
-                text = "Ошибка при генерации ссылки."
-            
-            await bot.send_message(
-                chat_id=message.chat.id,
-                text=text,
-                reply_markup=keyboard
-            )
-
-    except RequestException as e:
-        logger.error("Ошибка при отправке запроса на сервер: %s", e)
-        await message.answer("Ошибка при генерации ссылки.")
-    except KeyError:
-        await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
+        text = ""
+        if binding_url:
+            text = f"Перейдите по следующей ссылке для привязки карты: {binding_url}"
+        else:
+            text = "Ошибка при генерации ссылки."
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=text,
+            reply_markup=keyboard
+        )
+    elif response["status"] == "error":
+        await message.answer(response["message"])
+        return
 
 async def send_referral_link(message: types.Message, telegram_id: str, u_name: str = None):
     await message.answer(f"send_referral_link")
+    init_user_cache(telegram_id)
+
+    if links_cache[telegram_id]['referral_link'] is not None:
+        await message.answer(f"ИЗ кэша")
+        return links_cache[telegram_id]['referral_link']
+    
     referral_url = SERVER_URL + "/get_referral_link"
     user_data = {"telegram_id": telegram_id}
 
@@ -411,48 +370,93 @@ async def send_referral_link(message: types.Message, telegram_id: str, u_name: s
     await message.answer(f"{referral_url} referral_url")
     await message.answer(f"{user_data} user_data")
 
-    try:
-        response = send_request(
-            referral_url,
-            method="POST",
-            json=user_data
-        ) 
+    response = send_request(
+        referral_url,
+        method="POST",
+        json=user_data
+    ) 
 
-        text = ""
-        keyboard = InlineKeyboardMarkup(row_width=1)
-        keyboard.add(
-            InlineKeyboardButton("Назад", callback_data='earn_new_clients')
-        )
-    
-        if response["status"] == "success":
-            referral_link = response.get("referral_link")
-            
-            await message.answer(f"{referral_link} referral_link")
+    text = ""
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+    )
 
-            await bot.send_video(
-                chat_id=message.chat.id,
-                video=REFERRAL_VIDEO_URL,
-                caption=(
-                    f"Отправляю тебе реферальную ссылку:\n{referral_link}\n"
-                    f"Зарабатывай, продвигая It - образование."
-                ),
-                reply_markup=keyboard
-            )
+    if response["status"] == "success":
+        referral_link = response.get("referral_link")
+        links_cache[telegram_id]['referral_link'] = referral_link
+        
+        await message.answer(f"{referral_link} referral_link")
 
-        elif response["status"] == "error":
-            text = response["message"]
-        else:
-            text = "Ошибка при генерации ссылки"
-        await bot.send_message(
+        await bot.send_video(
             chat_id=message.chat.id,
-            text=text,
+            video=REFERRAL_VIDEO_URL,
+            caption=(
+                f"Отправляю тебе реферальную ссылку:\n{referral_link}\n"
+                f"Зарабатывай, продвигая It - образование."
+            ),
             reply_markup=keyboard
         )
-    except RequestException as e:
-        logger.error("Ошибка при отправке запроса на сервер: %s", e)
-        await message.answer("Ошибка при генерации реферальной ссылки.")
-    except KeyError:
-        await message.answer("Пользователь не зарегистрирован. Пожалуйста, нажмите /start для регистрации.")
+
+    elif response["status"] == "error":
+        text = response["message"]
+    else:
+        text = "Ошибка при генерации ссылки"
+    await bot.send_message(
+        chat_id=message.chat.id,
+        text=text,
+        reply_markup=keyboard
+    )
+
+async def send_invite_link(message: types.Message, telegram_id: str, u_name: str = None):
+    await message.answer(f"send_invite_link")
+    init_user_cache(telegram_id)
+
+    if links_cache[telegram_id]['invite_link'] is not None:
+        await message.answer(f"ИЗ кэша")
+        return links_cache[telegram_id]['invite_link']
+
+    invite_url = SERVER_URL + "/get_invite_link"
+    user_data = {"telegram_id": telegram_id}
+
+    await message.answer(f"{user_data} user_data")
+
+    response = send_request(
+        invite_url,
+        method="POST",
+        json=user_data
+    ) 
+
+    text = ""
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+    )
+
+    if response["status"] == "success":
+        invite_link = response.get("invite_link")
+        links_cache[telegram_id]['invite_link'] = invite_link
+        
+        await message.answer(f"{invite_link} invite_link")
+
+        await bot.send_video(
+            chat_id=message.chat.id,
+            video=REFERRAL_VIDEO_URL,
+            caption=(
+                f"Вот ссылка для присоединения к нашей группе. Обращайтесь с ней очень аккуратно. Она одноразовая и если вы воспользуетесь единственным шансом неверно, исправить ничего не получится: {invite_link}"
+            ),
+            reply_markup=keyboard
+        )
+
+    elif response["status"] == "error":
+        text = response["message"]
+    else:
+        text = "Ошибка при генерации ссылки"
+    await bot.send_message(
+        chat_id=message.chat.id,
+        text=text,
+        reply_markup=keyboard
+    )
 
 async def earn_new_clients(message: types.Message, telegram_id: str, u_name: str = None):
     keyboard = InlineKeyboardMarkup(row_width=1)
@@ -461,6 +465,7 @@ async def earn_new_clients(message: types.Message, telegram_id: str, u_name: str
         InlineKeyboardButton("Привязать/изменить карту", callback_data='bind_card'),
         InlineKeyboardButton("Сформировать отчёт о заработке", callback_data='generate_report'),
         InlineKeyboardButton("Налоги", callback_data='tax_info'),
+        InlineKeyboardButton("Документы", callback_data='documents'),
         InlineKeyboardButton("Назад", callback_data='start'),
     )
 
