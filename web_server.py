@@ -44,7 +44,6 @@ def web_server():
             link = invite_link.invite_link
             log.info("Пригласительная ссылка создана: %s", link)
 
-            # Проверяем, есть ли пользователь в базе данных
             check_user_url = SERVER_URL + "/save_invite_link"
             user_data = {
                 "telegram_id": tg_id,
