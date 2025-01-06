@@ -363,7 +363,8 @@ async def send_referral_link(message: types.Message, telegram_id: str, u_name: s
 
     if links_cache[telegram_id]['referral_link'] is not None:
         await message.answer(f"ИЗ кэша")
-        return links_cache[telegram_id]['referral_link']
+        await message.answer(links_cache[telegram_id]['referral_link'])
+        return 
     
     referral_url = SERVER_URL + "/get_referral_link"
     user_data = {"telegram_id": telegram_id}
@@ -416,7 +417,8 @@ async def send_invite_link(message: types.Message, telegram_id: str, u_name: str
 
     if links_cache[telegram_id]['invite_link'] is not None:
         await message.answer(f"ИЗ кэша")
-        return links_cache[telegram_id]['invite_link']
+        await message.answer(links_cache[telegram_id]['invite_link'])
+        return 
 
     invite_url = SERVER_URL + "/get_invite_link"
     user_data = {"telegram_id": telegram_id}
