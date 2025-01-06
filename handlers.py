@@ -33,6 +33,7 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
         username = message.from_user.username or message.from_user.first_name
     
     # Пример использования
+    await message.answer(f"sending Ga")
     send_event_to_ga4(telegram_id, "interaction", "start_click")
     
     referrer_id = message.text.split(' ')[1] if len(message.text.split(' ')) > 1 else None

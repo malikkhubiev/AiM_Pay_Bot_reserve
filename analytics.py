@@ -1,14 +1,15 @@
 import httpx
-import uuid
 from config import (
     GOOGLE_ANALYTICS_STEAM_ID,
     GOOGLE_ANALYTICS_API_SECRET_KEY
 )
+from utils import *
 
 def send_event_to_ga4(telegram_id, event_category, event_action, event_label=None, event_value=None):
+    log.info(f"send_event_to_ga4 inside")
     # Получаем уникальный идентификатор пользователя (cid)
     cid = str(telegram_id)  # или можно использовать UUID: str(uuid.uuid4())
-
+    log.info(f"cid {cid}")
     # Ваш идентификатор потока данных GA4
     stream_id = GOOGLE_ANALYTICS_STEAM_ID
 
@@ -29,11 +30,16 @@ def send_event_to_ga4(telegram_id, event_category, event_action, event_label=Non
             }
         ]
     }
+    log.info(f"before sending ga")
     
     # Отправляем запрос
     with httpx.Client() as client:
         response = client.post(url, json=params)
+        log.info(f"we have response")
+        log.info(f"{response}")
         if response.status_code == 204:
+            log.info(f"sent")
             print("Событие успешно отправлено в GA4.")
         else:
+            log.info(f"error with sending")
             print(f"Ошибка при отправке события: {response.status_code}, {response.text}")
