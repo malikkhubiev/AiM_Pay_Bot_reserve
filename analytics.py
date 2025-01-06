@@ -21,15 +21,16 @@ def send_event_to_ga4(telegram_id, event_category, event_action, event_label=Non
         "client_id": cid,
         "events": [
             {
-                "name": event_category,  # Категория события (например, "interaction")
+                "name": event_action,  # Действие события (например, "start_click")
                 "params": {
-                    "action": event_action,  # Действие (например, "click")
-                    "label": event_label,  # Метка события
-                    "value": event_value  # Значение события
+                    "event_category": event_category,  # Категория события (например, "interaction")
+                    "event_label": event_label,  # Метка события (можно оставить None, если не нужно)
+                    "event_value": event_value  # Значение события (можно оставить None, если не нужно)
                 }
             }
         ]
     }
+    
     log.info(f"before sending ga")
     
     # Отправляем запрос
