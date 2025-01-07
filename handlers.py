@@ -360,12 +360,12 @@ async def bind_card(message: types.Message, telegram_id: str, u_name: str = None
 async def send_referral_link(message: types.Message, telegram_id: str, u_name: str = None):
     await message.answer(f"send_referral_link")
     init_user_cache(telegram_id)
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+    )
 
     if links_cache[telegram_id]['referral_link'] is not None:
-        keyboard = InlineKeyboardMarkup(row_width=1)
-        keyboard.add(
-            InlineKeyboardButton("Назад", callback_data='earn_new_clients')
-        )
         await message.answer(f"ИЗ кэша")
         await bot.send_message(
             chat_id=message.chat.id,
@@ -388,10 +388,6 @@ async def send_referral_link(message: types.Message, telegram_id: str, u_name: s
     ) 
 
     text = ""
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
-    )
 
     if response["status"] == "success":
         referral_link = response.get("referral_link")
@@ -409,6 +405,8 @@ async def send_referral_link(message: types.Message, telegram_id: str, u_name: s
             reply_markup=keyboard
         )
 
+        return
+
     elif response["status"] == "error":
         text = response["message"]
     else:
@@ -422,12 +420,13 @@ async def send_referral_link(message: types.Message, telegram_id: str, u_name: s
 async def send_invite_link(message: types.Message, telegram_id: str, u_name: str = None):
     await message.answer(f"send_invite_link")
     init_user_cache(telegram_id)
+    
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+    )
 
     if links_cache[telegram_id]['invite_link'] is not None:
-        keyboard = InlineKeyboardMarkup(row_width=1)
-        keyboard.add(
-            InlineKeyboardButton("Назад", callback_data='earn_new_clients')
-        )
         await message.answer(f"ИЗ кэша")
         await bot.send_message(
             chat_id=message.chat.id,
@@ -448,10 +447,6 @@ async def send_invite_link(message: types.Message, telegram_id: str, u_name: str
     ) 
 
     text = ""
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
-    )
 
     if response["status"] == "success":
         invite_link = response.get("invite_link")
@@ -467,6 +462,8 @@ async def send_invite_link(message: types.Message, telegram_id: str, u_name: str
             ),
             reply_markup=keyboard
         )
+
+        return
 
     elif response["status"] == "error":
         text = response["message"]
