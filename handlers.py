@@ -362,8 +362,16 @@ async def send_referral_link(message: types.Message, telegram_id: str, u_name: s
     init_user_cache(telegram_id)
 
     if links_cache[telegram_id]['referral_link'] is not None:
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(
+            InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+        )
         await message.answer(f"ИЗ кэша")
-        await message.answer(links_cache[telegram_id]['referral_link'])
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=links_cache[telegram_id]['referral_link'],
+            reply_markup=keyboard
+        )
         return 
     
     referral_url = SERVER_URL + "/get_referral_link"
@@ -416,8 +424,16 @@ async def send_invite_link(message: types.Message, telegram_id: str, u_name: str
     init_user_cache(telegram_id)
 
     if links_cache[telegram_id]['invite_link'] is not None:
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(
+            InlineKeyboardButton("Назад", callback_data='earn_new_clients')
+        )
         await message.answer(f"ИЗ кэша")
-        await message.answer(links_cache[telegram_id]['invite_link'])
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=links_cache[telegram_id]['referral_link'],
+            reply_markup=keyboard
+        )
         return 
 
     invite_url = SERVER_URL + "/get_invite_link"
