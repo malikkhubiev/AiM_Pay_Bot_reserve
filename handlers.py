@@ -428,9 +428,12 @@ async def send_invite_link(message: types.Message, telegram_id: str, u_name: str
 
     if links_cache[telegram_id]['invite_link'] is not None:
         await message.answer(f"ИЗ кэша")
-        await bot.send_message(
+        await bot.send_video(
             chat_id=message.chat.id,
-            text=links_cache[telegram_id]['referral_link'],
+            video=REFERRAL_VIDEO_URL,
+            caption=(
+                f"Вот ссылка для присоединения к нашей группе. Обращайтесь с ней очень аккуратно. Она одноразовая и если вы воспользуетесь единственным шансом неверно, исправить ничего не получится: {links_cache[telegram_id]['referral_link']}"
+            ),
             reply_markup=keyboard
         )
         return 
