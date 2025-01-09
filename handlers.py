@@ -228,7 +228,7 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
 
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
-        InlineKeyboardButton("Назад", callback_data='generate_report')
+        InlineKeyboardButton("Назад", callback_data='earn_new_clients')
     )
 
     response = await send_request(
