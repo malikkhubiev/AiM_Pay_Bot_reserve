@@ -287,9 +287,10 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
     )
 
     if response["status"] == "success":
+        report = response["report"]
         # Формируем текст отчета на основе данных из ответа
-        username = response.get("username")
-        invited_list = response.get("invited_list")
+        username = report.get("username")
+        invited_list = report.get("invited_list")
 
         await message.answer(f"{username} username")
         await message.answer(f"{invited_list} invited_list")
