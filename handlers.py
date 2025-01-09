@@ -217,55 +217,6 @@ async def handle_pay_command(message: types.Message, telegram_id: str, u_name: s
     elif response["status"] == "error":
         await message.answer(response["message"])
 
-
-async def generate_overview_report(message: types.Message, telegram_id: str, u_name: str = None):
-    await message.answer(f"generate_overview_report")
-    overview_report_url = SERVER_URL + "/generate_overview_report"
-    user_data = {"telegram_id": telegram_id}
-
-    await message.answer(f"{telegram_id} telegram_id")
-    await message.answer(f"{overview_report_url} report_url")
-    await message.answer(f"{user_data} user_data")
-
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton("Назад", callback_data='generate_report')
-    )
-
-    response = await send_request(
-        overview_report_url,
-        method="POST",
-        json=user_data
-    )
-
-    if response["status"] == "success":
-        
-        report = response.get("report")
-
-        username = report.get("username")
-        total_payout = report.get("total_payout")
-        paid_count = report.get("paid_count")
-
-        
-        await message.answer(f"{username} username")
-        await message.answer(f"{total_payout} total_payout")
-
-        report = (
-            f"<b>Отчёт для {username}:</b>\n\n"
-            f"Количество привлечённых пользователей, оплативших курс: {paid_count} 👨‍🎓 \n"
-            f"Количество заработанных денег: {total_payout:.2f} руб 💸 \n"
-        )
-
-        await bot.send_video(
-            chat_id=message.chat.id,
-            video=REPORT_VIDEO_URL,
-            caption=report,
-            parse_mode=ParseMode.HTML,
-            reply_markup=keyboard
-        )
-    elif response["status"] == "error":
-        await message.answer(response["message"])
-
 async def generate_clients_report(message: types.Message, telegram_id: str, u_name: str = None):
     await message.answer(f"generate_clients_report")
     clients_report_url = SERVER_URL + "/generate_clients_report"
@@ -291,12 +242,16 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
         # Формируем текст отчета на основе данных из ответа
         username = report.get("username")
         invited_list = report.get("invited_list")
+        total_payout = report.get("total_payout")
+        paid_count = report.get("paid_count")
 
         await message.answer(f"{username} username")
         await message.answer(f"{invited_list} invited_list")
 
         report = (
-            f"<b>Отчёт для {username}:</b>\n"
+            f"<b>Отчёт для {username}:</b>\n\n"
+            f"Количество привлечённых пользователей, оплативших курс: {paid_count} 👨‍🎓 \n"
+            f"Количество заработанных денег: {total_payout:.2f} руб 💸 \n"
         )
 
         await bot.send_video(
