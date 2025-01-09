@@ -243,21 +243,17 @@ async def generate_overview_report(message: types.Message, telegram_id: str, u_n
         report = response.get("report")
 
         username = report.get("username")
-        referral_count = report.get("referral_count")
         total_payout = report.get("total_payout")
         paid_count = report.get("paid_count")
-        paid_percentage = report.get("paid_percentage")
 
         
         await message.answer(f"{username} username")
-        await message.answer(f"{referral_count} referral_count")
         await message.answer(f"{total_payout} total_payout")
 
         report = (
             f"<b>Отчёт для {username}:</b>\n\n"
-            f"Привлечённые пользователи: {referral_count}\n"
-            f"Оплатили курс: {paid_count} ({paid_percentage:.2f}%)\n"
-            f"Общее количество заработанных денег: {total_payout:.2f} руб.\n"
+            f"Количество привлечённых пользователей, оплативших курс: {paid_count} 👨‍🎓 \n"
+            f"Количество заработанных денег: {total_payout:.2f} руб 💸 \n"
         )
 
         await bot.send_video(
