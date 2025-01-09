@@ -239,12 +239,14 @@ async def generate_overview_report(message: types.Message, telegram_id: str, u_n
     )
 
     if response["status"] == "success":
-        # Формируем текст отчета на основе данных из ответа
-        username = response.get("username")
-        referral_count = response.get("referral_count")
-        total_payout = response.get("total_payout")
-        paid_count = response.get("paid_count")
-        paid_percentage = response.get("paid_percentage")
+        
+        report = response.get("report")
+
+        username = report.get("username")
+        referral_count = report.get("referral_count")
+        total_payout = report.get("total_payout")
+        paid_count = report.get("paid_count")
+        paid_percentage = report.get("paid_percentage")
 
         
         await message.answer(f"{username} username")
