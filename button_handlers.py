@@ -13,9 +13,7 @@ callback_handlers = {
     "get_invite_link": send_invite_link,
     "get_referral": send_referral_link,
     "bind_card": bind_card,
-    "generate_report": generate_report,
-    "report_overview": generate_overview_report,
-    "report_clients": generate_clients_report,
+    "generate_report": generate_clients_report,
     "tax_info": get_tax_info,
 }
 
