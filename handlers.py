@@ -256,7 +256,7 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
             f"<b>Отчёт для {username}:</b>\n\n"
             f"Количество привлечённых пользователей, оплативших курс: {paid_count} 👨‍🎓 \n"
             f"Количество заработанных денег: {total_payout:.2f} руб 💸 \n"
-            f"Баланс: {balance}:\n"
+            f"Баланс: {balance}.\n"
         )
 
         await bot.send_video(
