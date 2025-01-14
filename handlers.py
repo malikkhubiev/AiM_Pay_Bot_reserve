@@ -215,7 +215,10 @@ async def handle_pay_command(message: types.Message, telegram_id: str, u_name: s
         elif response["status"] == "error":
             await message.answer(response["message"])
     elif response["status"] == "error":
-        await message.answer(response["message"])
+        if response["message"] == "Internal server error":    
+            await message.answer("Вы ещё не зарегистрированы. Нажмите /start для начала работы")
+        else:
+            await message.answer(response["message"])
 
 async def generate_clients_report(message: types.Message, telegram_id: str, u_name: str = None):
     await message.answer(f"generate_clients_report")
