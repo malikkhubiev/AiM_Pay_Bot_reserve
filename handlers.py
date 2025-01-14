@@ -244,6 +244,7 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
         report = response["report"]
         # Формируем текст отчета на основе данных из ответа
         username = report.get("username")
+        balance = report.get("balance")
         invited_list = report.get("invited_list")
         total_payout = report.get("total_payout")
         paid_count = report.get("paid_count")
@@ -255,6 +256,7 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
             f"<b>Отчёт для {username}:</b>\n\n"
             f"Количество привлечённых пользователей, оплативших курс: {paid_count} 👨‍🎓 \n"
             f"Количество заработанных денег: {total_payout:.2f} руб 💸 \n"
+            f"Баланс: {balance}:\n"
         )
 
         await bot.send_video(
