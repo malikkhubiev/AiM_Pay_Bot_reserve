@@ -10,7 +10,7 @@ callback_handlers = {
     "privacy_policy": get_privacy_policy,
     "pay_course": handle_pay_command,
     "earn_new_clients": earn_new_clients,
-    "get_invite_link": send_invite_link,
+    # "get_invite_link": send_invite_link,
     "get_referral": send_referral_link,
     "bind_card": bind_card,
     "generate_report": generate_clients_report,
