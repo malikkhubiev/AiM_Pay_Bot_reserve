@@ -37,7 +37,7 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
     if referrer_id and not(referrer_id.isdigit()):
         referrer_id = None
 
-    await message.answer(f"referrer_id {referrer_id}")
+    log.info(f"referrer_id {referrer_id}")
 
     start_url = SERVER_URL + "/start"
     user_data = {
@@ -45,7 +45,7 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
         "username": username,
         "referrer_id": referrer_id
     }
-    await message.answer(f"user_data {user_data}")
+    log.info(f"userdata {userdata}")
     keyboard = InlineKeyboardMarkup(row_width=1)
 
     response = await send_request(
@@ -53,16 +53,16 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
         method="POST",
         json=user_data
     )
-    await message.answer(f"response {response}")
+    log.info(f"response {response}")
 
     if response["status"] == "success":
         if response["type"] == "temp_user":
-            await message.answer(f"temp")
+            log.info(f"temp")
             keyboard.add(
                 InlineKeyboardButton("Начало работы", callback_data='getting_started'),
                 InlineKeyboardButton("Документы", callback_data='documents'),
             )
-            await message.answer(f"sendMessage")
+            log.info(f"send_message")
             await bot.send_message(
                 chat_id=message.chat.id,
                 text="Добро пожаловать! Для начала работы с ботом вам нужно согласиться с политикой конфиденциальности и публичной офертой. Нажимая кнопку «Начало работы», вы подтверждаете своё согласие.",
@@ -92,20 +92,18 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
 async def getting_started(message: types.Message, telegram_id: str, u_name: str = None):
     log.info(f"Получена команда /getting_started от {telegram_id}")
 
-    await message.answer(f"hey")
-
     getting_started_url = SERVER_URL + "/getting_started"
     user_data = {
         "telegram_id": telegram_id
     }
-    await message.answer(f"{user_data} user_data")
+    log.info(f"user_data {user_data}")
 
     response = await send_request(
         getting_started_url,
         method="POST",
         json=user_data
     )
-    await message.answer(f"{response}")
+    log.info(f"response {response}")
 
     if response["status"] == "success":
         keyboard = InlineKeyboardMarkup(row_width=1)
@@ -165,15 +163,15 @@ async def get_privacy_policy(message: types.Message, telegram_id: str, u_name: s
 async def handle_pay_command(message: types.Message, telegram_id: str, u_name: str = None):
     amount = float(COURSE_AMOUNT)  # Пример суммы, можно заменить
     
-    await message.answer(f"{amount} amount")
+    log.info(f"amount {amount}")
 
     # Шаг 1: Проверка, зарегистрирован ли пользователь
     check_user_url = SERVER_URL + "/check_user"
 
-    await message.answer(f"{check_user_url} check_user_url")
+    log.info(f"check_user_url {check_user_url}")
 
     user_data = {"telegram_id": telegram_id}
-    await message.answer(f"{user_data} user_data")
+    log.info(f"user_data {user_data}")
 
     response = await send_request(
         check_user_url,
@@ -182,20 +180,20 @@ async def handle_pay_command(message: types.Message, telegram_id: str, u_name: s
     )
 
     if response["status"] == "success":
-        await message.answer(f"{response} response")
+        log.info(f"response {response}")
         user_id = response["user"]["id"]
         
-        await message.answer(f"{user_id} user_id")
+        log.info(f"user_id {user_id}")
 
         # Шаг 2: Отправка запроса на создание платежа
         create_payment_url = SERVER_URL + "/create_payment"
-        await message.answer(f"{create_payment_url} create_payment_url")
+        log.info(f"create_payment_url {create_payment_url}")
 
         payment_data = {
             "telegram_id": telegram_id
         }
 
-        await message.answer(f"{payment_data} payment_data")
+        log.info(f"payment_data {payment_data}")
         response = await send_request(
             create_payment_url,
             method="POST",
@@ -205,7 +203,7 @@ async def handle_pay_command(message: types.Message, telegram_id: str, u_name: s
         if response["status"] == "success":
             payment_url = response.get("confirmation", {}).get("confirmation_url")
             
-            await message.answer(f"{payment_url} payment_url")
+            log.info(f"payment_url {payment_url}")
 
             if payment_url:
                 await message.answer(f"Для оплаты курса, перейдите по ссылке: {payment_url}")
@@ -221,13 +219,13 @@ async def handle_pay_command(message: types.Message, telegram_id: str, u_name: s
             await message.answer(response["message"])
 
 async def generate_clients_report(message: types.Message, telegram_id: str, u_name: str = None):
-    await message.answer(f"generate_clients_report")
+    log.info(f"generate_clients_report")
     clients_report_url = SERVER_URL + "/generate_clients_report"
     user_data = {"telegram_id": telegram_id}
 
-    await message.answer(f"{telegram_id} telegram_id")
-    await message.answer(f"{clients_report_url} report_url")
-    await message.answer(f"{user_data} user_data")
+    log.info(f"telegram_id {telegram_id}")
+    log.info(f"clients_report_url {clients_report_url}")
+    log.info(f"user_data {user_data}")
 
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
@@ -249,8 +247,8 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
         total_payout = report.get("total_payout")
         paid_count = report.get("paid_count")
 
-        await message.answer(f"{username} username")
-        await message.answer(f"{invited_list} invited_list")
+        log.info(f"username {username}")
+        log.info(f"invited_list {invited_list}")
 
         report = (
             f"<b>Отчёт для {username}:</b>\n\n"
@@ -269,14 +267,14 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
 
         # Send the list of invited users
         if invited_list:
-            await message.answer(f"{invited_list} invited_list есть")
+            log.info(f"invited_list {invited_list}")
             for invited in invited_list:
-                await message.answer(f"{invited} invited перебор начался")
+                log.info(f"invited_list invited перебор начался")
                 user_info = (
                     f"<b>Пользователь:</b> {invited['username']}\n"
                     f"<b>Telegram ID:</b> {invited['telegram_id']}\n\n"
                 )
-                await message.answer(f"{user_info} user_info")
+                log.info(f"user_info {user_info}")
                 await bot.send_message(
                     chat_id=message.chat.id,
                     text=user_info,
@@ -295,7 +293,7 @@ async def bind_card(message: types.Message, telegram_id: str, u_name: str = None
     )
     if response["status"] == "success":
         binding_url = response["binding_url"]
-        await message.answer(f"{binding_url} binding_url")
+        log.info(f"binding_url {binding_url}")
         keyboard = InlineKeyboardMarkup(row_width=1)
         keyboard.add(
             InlineKeyboardButton("Назад", callback_data='earn_new_clients')
@@ -315,7 +313,7 @@ async def bind_card(message: types.Message, telegram_id: str, u_name: str = None
         return
 
 async def send_referral_link(message: types.Message, telegram_id: str, u_name: str = None):
-    await message.answer(f"send_referral_link")
+    log.info(f"send_referral_link")
     init_user_cache(telegram_id)
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
@@ -323,7 +321,7 @@ async def send_referral_link(message: types.Message, telegram_id: str, u_name: s
     )
 
     if links_cache[telegram_id]['referral_link'] is not None:
-        await message.answer(f"ИЗ кэша")
+        log.info(f"из кэша")
         await bot.send_video(
             chat_id=message.chat.id,
             video=REFERRAL_VIDEO_URL,
@@ -338,9 +336,9 @@ async def send_referral_link(message: types.Message, telegram_id: str, u_name: s
     referral_url = SERVER_URL + "/get_referral_link"
     user_data = {"telegram_id": telegram_id}
 
-    await message.answer(f"{telegram_id} telegram_id")
-    await message.answer(f"{referral_url} referral_url")
-    await message.answer(f"{user_data} user_data")
+    log.info(f"telegram_id {telegram_id}")
+    log.info(f"referral_url {referral_url}")
+    log.info(f"user_data {user_data}")
 
     response = await send_request(
         referral_url,
@@ -354,7 +352,7 @@ async def send_referral_link(message: types.Message, telegram_id: str, u_name: s
         referral_link = response.get("referral_link")
         links_cache[telegram_id]['referral_link'] = referral_link
         
-        await message.answer(f"{referral_link} referral_link")
+        log.info(f"referral_link {referral_link}")
 
         await bot.send_video(
             chat_id=message.chat.id,
@@ -379,7 +377,7 @@ async def send_referral_link(message: types.Message, telegram_id: str, u_name: s
     )
 
 async def send_invite_link(message: types.Message, telegram_id: str, u_name: str = None):
-    await message.answer(f"send_invite_link")
+    log.info(f"send_invite_link")
     init_user_cache(telegram_id)
     
     keyboard = InlineKeyboardMarkup(row_width=1)
@@ -388,7 +386,7 @@ async def send_invite_link(message: types.Message, telegram_id: str, u_name: str
     )
 
     if links_cache[telegram_id]['invite_link'] is not None:
-        await message.answer(f"ИЗ кэша")
+        log.info(f"из кэша")
         await bot.send_video(
             chat_id=message.chat.id,
             video=REFERRAL_VIDEO_URL,
@@ -402,7 +400,7 @@ async def send_invite_link(message: types.Message, telegram_id: str, u_name: str
     invite_url = SERVER_URL + "/get_invite_link"
     user_data = {"telegram_id": telegram_id}
 
-    await message.answer(f"{user_data} user_data")
+    log.info(f"user_data {user_data}")
 
     response = await send_request(
         invite_url,
@@ -416,7 +414,7 @@ async def send_invite_link(message: types.Message, telegram_id: str, u_name: str
         invite_link = response.get("invite_link")
         links_cache[telegram_id]['invite_link'] = invite_link
         
-        await message.answer(f"{invite_link} invite_link")
+        log.info(f"invite_link {invite_link}")
 
         await bot.send_video(
             chat_id=message.chat.id,
