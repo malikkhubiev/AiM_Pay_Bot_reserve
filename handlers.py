@@ -255,8 +255,8 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
         report = (
             f"<b>Отчёт для {username}:</b>\n\n"
             f"Количество привлечённых пользователей, оплативших курс: {paid_count} 👨‍🎓 \n"
-            f"Количество заработанных денег: {total_payout:.2f} руб 💸 \n"
-            f"Баланс: {balance}.\n"
+            f"Количество выплаченных денег: {total_payout:.2f} руб. 💸 \n"
+            f"Баланс: {balance} руб. 💰 \n"
         )
 
         await bot.send_video(
@@ -272,11 +272,9 @@ async def generate_clients_report(message: types.Message, telegram_id: str, u_na
             await message.answer(f"{invited_list} invited_list есть")
             for invited in invited_list:
                 await message.answer(f"{invited} invited перебор начался")
-                user_status = "Оплатил" if invited["paid"] else "Не оплатил"
                 user_info = (
                     f"<b>Пользователь:</b> {invited['username']}\n"
-                    f"<b>Telegram ID:</b> {invited['telegram_id']}\n"
-                    f"<b>Статус:</b> {user_status}\n\n"
+                    f"<b>Telegram ID:</b> {invited['telegram_id']}\n\n"
                 )
                 await message.answer(f"{user_info} user_info")
                 await bot.send_message(
