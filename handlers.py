@@ -73,10 +73,10 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
                 keyboard.add(
                     InlineKeyboardButton("Оплатить курс", callback_data='pay_course'),
                 )
-            else:
-                keyboard.add(
-                    InlineKeyboardButton("Получить ссылку", callback_data='get_invite_link'),
-                )
+            # else:
+            #     keyboard.add(
+            #         InlineKeyboardButton("Получить ссылку", callback_data='get_invite_link'),
+            #     )
             keyboard.add(
                 InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients')
             )
