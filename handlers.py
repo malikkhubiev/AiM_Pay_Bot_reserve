@@ -45,7 +45,7 @@ async def start(message: types.Message, telegram_id: str = None, username: str =
         "username": username,
         "referrer_id": referrer_id
     }
-    log.info(f"userdata {userdata}")
+    log.info(f"user_data  {user_data}")
     keyboard = InlineKeyboardMarkup(row_width=1)
 
     response = await send_request(
