@@ -136,7 +136,7 @@ async def get_documents(message: types.Message, telegram_id: str, u_name: str = 
 
 async def get_public_offer(message: types.Message, telegram_id: str, u_name: str = None):
     log.info(f"Получена команда /get_public_offer от {telegram_id}")
-    public_offer_url = SERVER_URL + "/offer"
+    public_offer_url = "https://docs.google.com/document/d/1N6ZZoRyW1uIBNVATMaFC_lxQDIpUi1vwNpS8YWvGr-U/edit?usp=sharing"
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("Назад", callback_data='documents')
@@ -149,7 +149,7 @@ async def get_public_offer(message: types.Message, telegram_id: str, u_name: str
 
 async def get_privacy_policy(message: types.Message, telegram_id: str, u_name: str = None):
     log.info(f"Получена команда /get_privacy_policy от {telegram_id}")
-    privacy_url = SERVER_URL + "/privacy"
+    privacy_url = "https://docs.google.com/document/d/1CWVSyjuYJXPIpMApAdMevFVnFuIxHbF7xE-Ngqmd-B0/edit?usp=sharing"
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("Назад", callback_data='documents')
