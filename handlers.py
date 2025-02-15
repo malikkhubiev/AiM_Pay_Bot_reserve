@@ -24,8 +24,8 @@ async def get_documents(message: types.Message, telegram_id: str, u_name: str = 
     log.info(f"Получена команда /get_documents от {telegram_id}")
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
-        InlineKeyboardButton("Публичная оферта", callback_data='public_offer'),
-        InlineKeyboardButton("Политика Конфиденциальности", callback_data='privacy_policy'),
+        InlineKeyboardButton("Публичная оферта 📗", callback_data='public_offer'),
+        InlineKeyboardButton("Политика Конфиденциальности 📙", callback_data='privacy_policy'),
         InlineKeyboardButton("Назад", callback_data='start'),
     )
     await bot.send_message(
